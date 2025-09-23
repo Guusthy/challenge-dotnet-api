@@ -8,6 +8,8 @@ namespace challenge_api_dotnet.Controllers;
 
 [ApiController]
 [Route("api/posicao")]
+[Produces("application/json")]
+[Tags("Posições")]
 public class PosicaoController :  ControllerBase
 {
     private readonly ApplicationDbContext _context;
@@ -18,6 +20,9 @@ public class PosicaoController :  ControllerBase
     }
 
     [HttpGet]
+    [EndpointSummary("Listar posições")]
+    [EndpointDescription("Retorna todas as posições registradas no sistema.")]
+    [ProducesResponseType(typeof(List<PosicaoDTO>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<PosicaoDTO>>> GetAll()
     {
         var posicoes = await _context.Posicoes.ToListAsync();
@@ -25,7 +30,11 @@ public class PosicaoController :  ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<PosicaoDTO>> GetById(int id)
+    [EndpointSummary("Obter posição por ID")]
+    [EndpointDescription("Retorna os dados da posição especificada pelo identificador.")]
+    [ProducesResponseType(typeof(PosicaoDTO), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PosicaoDTO>> GetById([FromRoute] int id)
     {
         var posicao = await _context.Posicoes.FindAsync(id);
         if (posicao == null)
@@ -36,7 +45,10 @@ public class PosicaoController :  ControllerBase
     }
     
     [HttpGet("moto/{motoId}")]
-    public async Task<ActionResult<List<PosicaoDTO>>> GetByMotoId(int motoId)
+    [EndpointSummary("Listar posições de uma moto")]
+    [EndpointDescription("Retorna todas as posições associadas a uma moto específica.")]
+    [ProducesResponseType(typeof(List<PosicaoDTO>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<PosicaoDTO>>> GetByMotoId([FromRoute] int motoId)
     {
         var posicoes = await _context.Posicoes
             .Where(p => p.MotoIdMoto == motoId)
@@ -46,7 +58,10 @@ public class PosicaoController :  ControllerBase
     }
     
     [HttpGet("historico/{motoId}")]
-    public async Task<ActionResult<List<PosicaoDTO>>> GetHistoricoDaMoto(int motoId)
+    [EndpointSummary("Histórico de posições da moto")]
+    [EndpointDescription("Retorna o histórico de posições de uma moto, ordenado por data decrescente.")]
+    [ProducesResponseType(typeof(List<PosicaoDTO>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<PosicaoDTO>>> GetHistoricoDaMoto([FromRoute] int motoId)
     {
         var posicoes = await _context.Posicoes
             .Where(p => p.MotoIdMoto == motoId)
@@ -57,6 +72,9 @@ public class PosicaoController :  ControllerBase
     }
     
     [HttpGet("motos-revisao")]
+    [EndpointSummary("Listar posições de motos em revisão")]
+    [EndpointDescription("Retorna as posições atuais de todas as motos com status 'Revisão'.")]
+    [ProducesResponseType(typeof(List<PosicaoDTO>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<PosicaoDTO>>> GetPosicoesDeMotosRevisao()
     {
         var posicoes = await _context.Posicoes
@@ -68,7 +86,12 @@ public class PosicaoController :  ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<PosicaoDTO>> Create(PosicaoDTO dto)
+    [Consumes("application/json")]
+    [EndpointSummary("Criar posição")]
+    [EndpointDescription("Cria uma nova posição.")]
+    [ProducesResponseType(typeof(PosicaoDTO), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)] 
+    public async Task<ActionResult<PosicaoDTO>> Create([FromBody] PosicaoDTO dto)
     {
         var posicao = PosicaoMapper.ToEntity(dto);
         _context.Posicoes.Add(posicao);
@@ -79,7 +102,13 @@ public class PosicaoController :  ControllerBase
     }
     
     [HttpPut("{id}")]
-    public async Task<ActionResult<PosicaoDTO>> Update(int id, PosicaoDTO dto)
+    [Consumes("application/json")]
+    [EndpointSummary("Atualizar posição")]
+    [EndpointDescription("Atualiza os dados de uma posição existente.")]
+    [ProducesResponseType(typeof(PosicaoDTO), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PosicaoDTO>> Update([FromRoute] int id,[FromBody] PosicaoDTO dto)
     {
         if (id != dto.IdPosicao)
         {
@@ -103,7 +132,11 @@ public class PosicaoController :  ControllerBase
     }
     
     [HttpDelete("{id}")]
-    public async Task<ActionResult<PosicaoDTO>> Delete(int id)
+    [EndpointSummary("Excluir posição")]
+    [EndpointDescription("Remove uma posição do sistema.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PosicaoDTO>> Delete([FromRoute] int id)
     {
         var posicao = await _context.Posicoes.FindAsync(id);
         if (posicao == null)

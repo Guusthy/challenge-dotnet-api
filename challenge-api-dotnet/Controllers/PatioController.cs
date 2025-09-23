@@ -8,6 +8,8 @@ namespace challenge_api_dotnet.Controllers;
 
 [ApiController]
 [Route("api/patio")]
+[Produces("application/json")]
+[Tags("Pátios")]
 public class PatioController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
@@ -18,6 +20,9 @@ public class PatioController : ControllerBase
     }
 
     [HttpGet]
+    [EndpointSummary("Listar pátios")]
+    [EndpointDescription("Retorna todos os pátios cadastrados.")]
+    [ProducesResponseType(typeof(List<PatioDTO>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<PatioDTO>>> GetAll()
     {
         var patios = await _context.Patios.ToListAsync();
@@ -25,7 +30,11 @@ public class PatioController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<PatioDTO>> GetById(int id)
+    [EndpointSummary("Obter pátio por ID")]
+    [EndpointDescription("Retorna os dados do pátio especificado pelo identificador.")]
+    [ProducesResponseType(typeof(PatioDTO), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PatioDTO>> GetById([FromRoute] int id)
     {
         var patio = await _context.Patios.FindAsync(id);
         if (patio == null)
@@ -36,6 +45,9 @@ public class PatioController : ControllerBase
     }
     
     [HttpGet("com-motos")]
+    [EndpointSummary("Listar pátios com dados vinculados")]
+    [EndpointDescription("Retorna pátios que possuem usuários, posições ou marcadores fixos vinculados.")]
+    [ProducesResponseType(typeof(List<PatioDTO>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<PatioDTO>>> GetPatiosComMotos()
     {
         var patios = await _context.Patios
@@ -46,7 +58,10 @@ public class PatioController : ControllerBase
     }
 
     [HttpGet("{id}/motos")]
-    public async Task<ActionResult<List<MotoDTO>>> GetMotosPorPatio(int id)
+    [EndpointSummary("Listar motos de um pátio")]
+    [EndpointDescription("Retorna todas as motos atualmente associadas ao pátio informado.")]
+    [ProducesResponseType(typeof(List<MotoDTO>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<MotoDTO>>> GetMotosPorPatio([FromRoute] int id)
     {
         var motos = await _context.Posicoes
             .Where(p => p.PatioIdPatio == id && p.MotoIdMoto != null)
@@ -58,7 +73,12 @@ public class PatioController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<PatioDTO>> Create(PatioDTO dto)
+    [Consumes("application/json")]
+    [EndpointSummary("Criar pátio")]
+    [EndpointDescription("Cria um novo pátio.")]
+    [ProducesResponseType(typeof(PatioDTO), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PatioDTO>> Create([FromBody] PatioDTO dto)
     {
         var patio = PatioMapper.ToEntity(dto);
         _context.Patios.Add(patio);
@@ -69,7 +89,13 @@ public class PatioController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<PatioDTO>> Update(int id, PatioDTO dto)
+    [Consumes("application/json")]
+    [EndpointSummary("Atualizar pátio")]
+    [EndpointDescription("Atualiza os dados de um pátio existente.")]
+    [ProducesResponseType(typeof(PatioDTO), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PatioDTO>> Update([FromRoute] int id,[FromBody]  PatioDTO dto)
     {
         if (id != dto.IdPatio)
         {
@@ -90,7 +116,11 @@ public class PatioController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<ActionResult<PatioDTO>> Delete(int id)
+    [EndpointSummary("Excluir pátio")]
+    [EndpointDescription("Remove um pátio do sistema.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PatioDTO>> Delete([FromRoute] int id)
     {
         var patio = await _context.Patios.FindAsync(id);
         if (patio == null)
@@ -101,6 +131,4 @@ public class PatioController : ControllerBase
         await _context.SaveChangesAsync();
         return NoContent();
     }
-    
-    
 }
