@@ -6,6 +6,10 @@
 # dotenv files
 .env
 
+# Configurações locais do Rider/IDE
+*.DotSettings.user
+
+
 # App config local
 appsettings.Development.json
 
