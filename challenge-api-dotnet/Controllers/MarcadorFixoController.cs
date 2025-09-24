@@ -42,7 +42,7 @@ public class MarcadorFixoController : ControllerBase
         // HATEOAS por item
         var items = dtos.Select(dto =>
         {
-            var links = new List<Link>
+            var links = new List<HateoasLink>
             {
                 new("self", Url.ActionHref(nameof(GetById), new { id = dto.IdMarcadorArucoFixo }), "GET"),
                 new("delete", Url.ActionHref(nameof(Delete), new { id = dto.IdMarcadorArucoFixo }), "DELETE"),
@@ -75,7 +75,7 @@ public class MarcadorFixoController : ControllerBase
 
         var dto = MarcadorFixoMapper.ToDto(entidade);
 
-        var links = new List<Link>
+        var links = new List<HateoasLink>
         {
             new("self", Url.ActionHref(nameof(GetById), new { id }), "GET"),
             new("list", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET"),
@@ -114,7 +114,7 @@ public class MarcadorFixoController : ControllerBase
 
         var items = dtos.Select(dto =>
         {
-            var links = new List<Link>
+            var links = new List<HateoasLink>
             {
                 new("self", Url.ActionHref(nameof(GetById), new { id = dto.IdMarcadorArucoFixo }), "GET"),
                 new("delete", Url.ActionHref(nameof(Delete), new { id = dto.IdMarcadorArucoFixo }), "DELETE"),
@@ -149,7 +149,7 @@ public class MarcadorFixoController : ControllerBase
 
         var dto = MarcadorFixoMapper.ToDto(entidade);
 
-        var links = new List<Link>
+        var links = new List<HateoasLink>
         {
             new("self", Url.ActionHref(nameof(GetByCodigoAruco), new { codigoAruco }), "GET"),
             new("marcador-by-id", Url.ActionHref(nameof(GetById), new { id = dto.IdMarcadorArucoFixo }), "GET"),
@@ -173,7 +173,7 @@ public class MarcadorFixoController : ControllerBase
         await _context.SaveChangesAsync();
 
         var resp = MarcadorFixoMapper.ToDto(entidade);
-        var links = new List<Link>
+        var links = new List<HateoasLink>
         {
             new("self", Url.ActionHref(nameof(GetById), new { id = resp.IdMarcadorArucoFixo }), "GET"),
             new("delete", Url.ActionHref(nameof(Delete), new { id = resp.IdMarcadorArucoFixo }), "DELETE"),
@@ -201,9 +201,9 @@ public class MarcadorFixoController : ControllerBase
     }
 
     // Método para auxiliar a paginação do endpoint com rota que inclui patioId
-    private IEnumerable<Link> BuildPatioPagingLinks(int patioId, int page, int size, int totalPages)
+    private IEnumerable<HateoasLink> BuildPatioPagingLinks(int patioId, int page, int size, int totalPages)
     {
-        var links = new List<Link>
+        var links = new List<HateoasLink>
         {
             new("self", Url.ActionHref(nameof(GetByPatioId), new { patioId, page, size }), "GET"),
             new("first", Url.ActionHref(nameof(GetByPatioId), new { patioId, page = 1, size }), "GET"),

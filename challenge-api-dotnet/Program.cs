@@ -1,4 +1,5 @@
 using challenge_api_dotnet.Data;
+using challenge_api_dotnet.Hateoas;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
@@ -6,29 +7,22 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddOpenApi(options =>
+builder.Services.AddSwaggerGen(c =>
 {
-    options.AddDocumentTransformer((document, context, ct) =>
+    c.SwaggerDoc("v1", new OpenApiInfo
     {
-        document.Info = new OpenApiInfo
-        {
-            Title = "Challenge API",
-            Version = "v1",
-            Description = "API do Challenge – gestão de motos/pátios.",
-        };
-        return Task.CompletedTask;
+        Title = "Challenge API",
+        Version = "v1",
+        Description = "API do Challenge – gestão de motos/pátios."
     });
 });
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-{
-    options.UseOracle(connectionString);
-});
+builder.Services.AddDbContext<ApplicationDbContext>(options => { options.UseOracle(connectionString); });
 
 var app = builder.Build();
 
-app.MapOpenApi();
+app.UseSwagger(c => { c.RouteTemplate = "openapi/{documentName}.json"; });
 
 app.UseSwaggerUI(c =>
 {

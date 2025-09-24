@@ -45,7 +45,7 @@ public class MarcadorArucoMovelController : ControllerBase
         // Links por item
         var dtosWithLinks = dtos.Select(dto =>
         {
-            var links = new List<Link>
+            var links = new List<HateoasLink>
             {
                 new("self", Url.ActionHref(nameof(GetById), new { id = dto.IdMarcadorMovel }), "GET"),
                 new("update", Url.ActionHref(nameof(Update), new { id = dto.IdMarcadorMovel }), "PUT"),
@@ -82,7 +82,7 @@ public class MarcadorArucoMovelController : ControllerBase
 
         var dto = MarcadorArucoMovelMapper.ToDto(marcador);
 
-        var links = new List<Link>
+        var links = new List<HateoasLink>
         {
             new("self", Url.ActionHref(nameof(GetById), new { id }), "GET"),
             new("list", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET"),
@@ -111,7 +111,7 @@ public class MarcadorArucoMovelController : ControllerBase
         if (marcador == null) return NotFound();
 
         var dto = MarcadorArucoMovelMapper.ToDto(marcador);
-        var links = new List<Link>
+        var links = new List<HateoasLink>
         {
             new("self", Url.ActionHref(nameof(GetByMotoId), new { idMoto }), "GET"),
             new("marcador-by-id", Url.ActionHref(nameof(GetById), new { id = dto.IdMarcadorMovel }), "GET"),
@@ -135,7 +135,7 @@ public class MarcadorArucoMovelController : ControllerBase
         if (marcador == null) return NotFound();
 
         var dto = MarcadorArucoMovelMapper.ToDto(marcador);
-        var links = new List<Link>
+        var links = new List<HateoasLink>
         {
             new("self", Url.ActionHref(nameof(GetByCodigoAruco), new { codigoAruco }), "GET"),
             new("marcador-by-id", Url.ActionHref(nameof(GetById), new { id = dto.IdMarcadorMovel }), "GET"),
@@ -158,7 +158,7 @@ public class MarcadorArucoMovelController : ControllerBase
         await _context.SaveChangesAsync();
 
         var response = MarcadorArucoMovelMapper.ToDto(marcador);
-        var links = new List<Link>
+        var links = new List<HateoasLink>
         {
             new("self", Url.ActionHref(nameof(GetById), new { id = marcador.IdMarcadorMovel }), "GET"),
             new("update", Url.ActionHref(nameof(Update), new { id = marcador.IdMarcadorMovel }), "PUT"),
@@ -193,7 +193,7 @@ public class MarcadorArucoMovelController : ControllerBase
         await _context.SaveChangesAsync();
 
         var response = MarcadorArucoMovelMapper.ToDto(marcador);
-        var links = new List<Link>
+        var links = new List<HateoasLink>
         {
             new("self", Url.ActionHref(nameof(GetById), new { id }), "GET"),
             new("delete", Url.ActionHref(nameof(Delete), new { id }), "DELETE"),

@@ -22,6 +22,7 @@
         </PackageReference>
         <PackageReference Include="Oracle.EntityFrameworkCore" Version="9.23.80" />
         <PackageReference Include="Scalar.AspNetCore" Version="2.8.5" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4" />
         <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="9.0.4" />
     </ItemGroup>
 

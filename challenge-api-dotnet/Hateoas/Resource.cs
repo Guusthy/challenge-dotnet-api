@@ -3,12 +3,12 @@ namespace challenge_api_dotnet.Hateoas;
 public sealed class Resource<T>
 {
     //Classe utilitária para hateoas com DTOs
-    public T Dto { get; }
-    public IEnumerable<Link> Links { get; }
+    public T Data { get; }
+    public IEnumerable<HateoasLink> Links { get; }
 
-    public Resource(T dto, IEnumerable<Link> links)
+    public Resource(T data, IEnumerable<HateoasLink> links)
     {
-        Dto = dto;
+        Data = data;
         Links = links;
     }
 }
