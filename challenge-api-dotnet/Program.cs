@@ -1,5 +1,7 @@
 using challenge_api_dotnet.Data;
 using challenge_api_dotnet.Hateoas;
+using challenge_api_dotnet.Services;
+using challenge_api_dotnet.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
@@ -19,6 +21,7 @@ builder.Services.AddSwaggerGen(c =>
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options => { options.UseOracle(connectionString); });
+builder.Services.AddScoped<IMarcadorArucoMovelService, MarcadorArucoMovelService>();
 
 var app = builder.Build();
 

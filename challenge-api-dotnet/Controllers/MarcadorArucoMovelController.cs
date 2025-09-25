@@ -4,6 +4,7 @@ using challenge_api_dotnet.Dtos;
 using challenge_api_dotnet.Hateoas;
 using challenge_api_dotnet.Mappers;
 using challenge_api_dotnet.Models;
+using challenge_api_dotnet.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,8 +16,8 @@ namespace challenge_api_dotnet.Controllers;
 [Tags("Marcadores ArUco Móveis")]
 public class MarcadorArucoMovelController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
-    public MarcadorArucoMovelController(ApplicationDbContext context) => _context = context;
+    private readonly IMarcadorArucoMovelService _service;
+    public MarcadorArucoMovelController(IMarcadorArucoMovelService service) => _service = service;
 
     [HttpGet]
     [EndpointSummary("Listar marcadores móveis")]
@@ -26,30 +27,16 @@ public class MarcadorArucoMovelController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int size = 10)
     {
-        page = page < 1 ? 1 : page;
-        size = size is < 1 or > 100 ? 10 : size;
+        var pagedResult = await _service.GetPagedAsync(page, size);
 
-        // Define ponto de partida da consulta (ainda não foi ao banco)
-        IQueryable<MarcadorArucoMovel> query = _context.MarcadoresArucoMoveis.AsNoTracking();
-
-        var total = await query.LongCountAsync();
-
-        var marcadores = await query
-            .OrderBy(m => m.IdMarcadorMovel)
-            .Skip((page - 1) * size)
-            .Take(size)
-            .ToListAsync();
-
-        var dtos = marcadores.Select(MarcadorArucoMovelMapper.ToDto).ToList();
-
-        // Links por item
-        var dtosWithLinks = dtos.Select(dto =>
+        // HATEOAS por item
+        var itemResources = pagedResult.Items.Select(dto =>
         {
             var links = new List<HateoasLink>
             {
                 new("self", Url.ActionHref(nameof(GetById), new { id = dto.IdMarcadorMovel }), "GET"),
                 new("update", Url.ActionHref(nameof(Update), new { id = dto.IdMarcadorMovel }), "PUT"),
-                new("delete", Url.ActionHref(nameof(Delete), new { id = dto.IdMarcadorMovel }), "DELETE")
+                new("delete", Url.ActionHref(nameof(Delete), new { id = dto.IdMarcadorMovel }), "DELETE"),
             };
 
             if (dto.MotoId is not null)
@@ -58,14 +45,12 @@ public class MarcadorArucoMovelController : ControllerBase
             return new Resource<MarcadorArucoMovelDTO>(dto, links);
         });
 
-        var totalPages = (int)Math.Ceiling((double)total / size);
-
-        // Links da coleção
-        var collectionLinks = Url.PagingLinks(nameof(GetAll), page, size, totalPages).ToList();
-        collectionLinks.Add(new("create", Url.ActionHref(nameof(Create)), "POST"));
+        var totalPages = (int)Math.Ceiling((double)pagedResult.Total / pagedResult.Size);
+        // Cria os links HATEOAS da coleção
+        var collectionLinks = Url.PagingLinks(nameof(GetAll), pagedResult.Page, pagedResult.Size, totalPages).ToList();
 
         var result = new PagedResult<Resource<MarcadorArucoMovelDTO>>(
-            dtosWithLinks, page, size, total, collectionLinks);
+            itemResources, pagedResult.Page, pagedResult.Size, pagedResult.Total, collectionLinks);
 
         return Ok(result);
     }
@@ -77,10 +62,8 @@ public class MarcadorArucoMovelController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Resource<MarcadorArucoMovelDTO>>> GetById([FromRoute] int id)
     {
-        var marcador = await _context.MarcadoresArucoMoveis.FindAsync(id);
-        if (marcador == null) return NotFound();
-
-        var dto = MarcadorArucoMovelMapper.ToDto(marcador);
+        var dto = await _service.GetByIdAsync(id);
+        if (dto is null) return NotFound();
 
         var links = new List<HateoasLink>
         {
@@ -88,7 +71,7 @@ public class MarcadorArucoMovelController : ControllerBase
             new("list", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET"),
             new("update", Url.ActionHref(nameof(Update), new { id }), "PUT"),
             new("delete", Url.ActionHref(nameof(Delete), new { id }), "DELETE"),
-            new("create", Url.ActionHref(nameof(Create)), "POST")
+            new("create", Url.ActionHref(nameof(Create)), "POST"),
         };
 
         if (dto.MotoId is not null)
@@ -104,18 +87,14 @@ public class MarcadorArucoMovelController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Resource<MarcadorArucoMovelDTO>>> GetByMotoId([FromRoute] int idMoto)
     {
-        var marcador = await _context.MarcadoresArucoMoveis
-            .AsNoTracking()
-            .FirstOrDefaultAsync(m => m.MotoIdMoto == idMoto);
+        var dto = await _service.GetByMotoIdAsync(idMoto);
+        if (dto is null) return NotFound();
 
-        if (marcador == null) return NotFound();
-
-        var dto = MarcadorArucoMovelMapper.ToDto(marcador);
         var links = new List<HateoasLink>
         {
             new("self", Url.ActionHref(nameof(GetByMotoId), new { idMoto }), "GET"),
             new("marcador-by-id", Url.ActionHref(nameof(GetById), new { id = dto.IdMarcadorMovel }), "GET"),
-            new("list", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET")
+            new("list", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET"),
         };
 
         return Ok(new Resource<MarcadorArucoMovelDTO>(dto, links));
@@ -128,18 +107,14 @@ public class MarcadorArucoMovelController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Resource<MarcadorArucoMovelDTO>>> GetByCodigoAruco([FromQuery] string codigoAruco)
     {
-        var marcador = await _context.MarcadoresArucoMoveis
-            .AsNoTracking()
-            .FirstOrDefaultAsync(m => m.CodigoAruco.ToLower() == codigoAruco.ToLower());
+        var dto = await _service.GetByCodigoArucoAsync(codigoAruco);
+        if (dto is null) return NotFound();
 
-        if (marcador == null) return NotFound();
-
-        var dto = MarcadorArucoMovelMapper.ToDto(marcador);
         var links = new List<HateoasLink>
         {
             new("self", Url.ActionHref(nameof(GetByCodigoAruco), new { codigoAruco }), "GET"),
             new("marcador-by-id", Url.ActionHref(nameof(GetById), new { id = dto.IdMarcadorMovel }), "GET"),
-            new("list", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET")
+            new("list", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET"),
         };
 
         return Ok(new Resource<MarcadorArucoMovelDTO>(dto, links));
@@ -153,22 +128,19 @@ public class MarcadorArucoMovelController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<Resource<MarcadorArucoMovelDTO>>> Create([FromBody] MarcadorArucoMovelDTO dto)
     {
-        var marcador = MarcadorArucoMovelMapper.ToEntity(dto);
-        _context.MarcadoresArucoMoveis.Add(marcador);
-        await _context.SaveChangesAsync();
+        var created = await _service.CreateAsync(dto);
 
-        var response = MarcadorArucoMovelMapper.ToDto(marcador);
         var links = new List<HateoasLink>
         {
-            new("self", Url.ActionHref(nameof(GetById), new { id = marcador.IdMarcadorMovel }), "GET"),
-            new("update", Url.ActionHref(nameof(Update), new { id = marcador.IdMarcadorMovel }), "PUT"),
-            new("delete", Url.ActionHref(nameof(Delete), new { id = marcador.IdMarcadorMovel }), "DELETE"),
-            new("list", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET")
+            new("self", Url.ActionHref(nameof(GetById), new { id = created.IdMarcadorMovel }), "GET"),
+            new("update", Url.ActionHref(nameof(Update), new { id = created.IdMarcadorMovel }), "PUT"),
+            new("delete", Url.ActionHref(nameof(Delete), new { id = created.IdMarcadorMovel }), "DELETE"),
+            new("list", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET"),
         };
 
         return CreatedAtAction(nameof(GetById),
-            new { id = marcador.IdMarcadorMovel },
-            new Resource<MarcadorArucoMovelDTO>(response, links));
+            new { id = created.IdMarcadorMovel },
+            new Resource<MarcadorArucoMovelDTO>(created, links));
     }
 
     [HttpPut("{id}")]
@@ -183,24 +155,17 @@ public class MarcadorArucoMovelController : ControllerBase
     {
         if (id != dto.IdMarcadorMovel) return BadRequest();
 
-        var marcador = await _context.MarcadoresArucoMoveis.FindAsync(id);
-        if (marcador == null) return NotFound();
+        var updated = await _service.UpdateAsync(id, dto);
+        if (updated is null) return NotFound();
 
-        marcador.CodigoAruco = dto.CodigoAruco;
-        marcador.DataInstalacao = dto.DataInstalacao;
-        marcador.MotoIdMoto = dto.MotoId;
-
-        await _context.SaveChangesAsync();
-
-        var response = MarcadorArucoMovelMapper.ToDto(marcador);
         var links = new List<HateoasLink>
         {
             new("self", Url.ActionHref(nameof(GetById), new { id }), "GET"),
             new("delete", Url.ActionHref(nameof(Delete), new { id }), "DELETE"),
-            new("list", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET")
+            new("list", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET"),
         };
 
-        return Ok(new Resource<MarcadorArucoMovelDTO>(response, links));
+        return Ok(new Resource<MarcadorArucoMovelDTO>(updated, links));
     }
 
     [HttpDelete("{id}")]
@@ -209,12 +174,5 @@ public class MarcadorArucoMovelController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete([FromRoute] int id)
-    {
-        var marcador = await _context.MarcadoresArucoMoveis.FindAsync(id);
-        if (marcador == null) return NotFound();
-
-        _context.MarcadoresArucoMoveis.Remove(marcador);
-        await _context.SaveChangesAsync();
-        return NoContent();
-    }
+        => (await _service.DeleteAsync(id)) ? NoContent() : NotFound();
 }
