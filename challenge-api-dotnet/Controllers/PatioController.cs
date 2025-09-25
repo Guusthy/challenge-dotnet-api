@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace challenge_api_dotnet.Controllers;
 
 [ApiController]
-[Route("api/patio")]
+[Route("api/patios")]
 [Produces("application/json")]
 [Tags("Pátios")]
 public class PatioController : ControllerBase
