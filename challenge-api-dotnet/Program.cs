@@ -22,6 +22,7 @@ builder.Services.AddSwaggerGen(c =>
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options => { options.UseOracle(connectionString); });
 builder.Services.AddScoped<IMarcadorArucoMovelService, MarcadorArucoMovelService>();
+builder.Services.AddScoped<IMarcadorFixoService, MarcadorFixoService>();
 
 var app = builder.Build();
 

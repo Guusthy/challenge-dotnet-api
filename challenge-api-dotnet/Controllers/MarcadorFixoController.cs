@@ -2,6 +2,7 @@ using challenge_api_dotnet.Data;
 using challenge_api_dotnet.Dtos;
 using challenge_api_dotnet.Hateoas;
 using challenge_api_dotnet.Mappers;
+using challenge_api_dotnet.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,8 +14,8 @@ namespace challenge_api_dotnet.Controllers;
 [Tags("Marcadores ArUco Fixos")]
 public class MarcadorFixoController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
-    public MarcadorFixoController(ApplicationDbContext context) => _context = context;
+    private readonly IMarcadorFixoService _service;
+    public MarcadorFixoController(IMarcadorFixoService service) => _service = service;
 
     [HttpGet]
     [EndpointSummary("Listar marcadores fixos")]
@@ -24,23 +25,9 @@ public class MarcadorFixoController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int size = 10)
     {
-        page = page < 1 ? 1 : page;
-        size = size is < 1 or > 100 ? 10 : size;
+        var pagedResult = await _service.GetPagedAsync(page, size);
 
-        var query = _context.MarcadoresFixos.AsNoTracking();
-
-        var total = await query.LongCountAsync();
-
-        var entidades = await query
-            .OrderBy(m => m.IdMarcadorArucoFixo)
-            .Skip((page - 1) * size)
-            .Take(size)
-            .ToListAsync();
-
-        var dtos = entidades.Select(MarcadorFixoMapper.ToDto).ToList();
-
-        // HATEOAS por item
-        var items = dtos.Select(dto =>
+        var items = pagedResult.Items.Select(dto =>
         {
             var links = new List<HateoasLink>
             {
@@ -49,17 +36,15 @@ public class MarcadorFixoController : ControllerBase
                 new("list", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET"),
                 new("create", Url.ActionHref(nameof(Create)), "POST")
             };
-
             return new Resource<MarcadorFixoDTO>(dto, links);
         });
 
-        var totalPages = (int)Math.Ceiling((double)total / size);
-
-        // Links da coleção
-        var collectionLinks = Url.PagingLinks(nameof(GetAll), page, size, totalPages).ToList();
+        var totalPages = (int)Math.Ceiling((double)pagedResult.Total / pagedResult.Size);
+        var collectionLinks = Url.PagingLinks(nameof(GetAll), pagedResult.Page, pagedResult.Size, totalPages).ToList();
         collectionLinks.Add(new("create", Url.ActionHref(nameof(Create)), "POST"));
 
-        var result = new PagedResult<Resource<MarcadorFixoDTO>>(items, page, size, total, collectionLinks);
+        var result = new PagedResult<Resource<MarcadorFixoDTO>>(items, pagedResult.Page, pagedResult.Size,
+            pagedResult.Total, collectionLinks);
         return Ok(result);
     }
 
@@ -70,10 +55,8 @@ public class MarcadorFixoController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Resource<MarcadorFixoDTO>>> GetById([FromRoute] int id)
     {
-        var entidade = await _context.MarcadoresFixos.FindAsync(id);
-        if (entidade == null) return NotFound();
-
-        var dto = MarcadorFixoMapper.ToDto(entidade);
+        var dto = await _service.GetByIdAsync(id);
+        if (dto is null) return NotFound();
 
         var links = new List<HateoasLink>
         {
@@ -95,24 +78,9 @@ public class MarcadorFixoController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int size = 10)
     {
-        page = page < 1 ? 1 : page;
-        size = size is < 1 or > 100 ? 10 : size;
+        var pagedResult = await _service.GetByPatioIdPagedAsync(patioId, page, size);
 
-        var query = _context.MarcadoresFixos
-            .AsNoTracking()
-            .Where(m => m.PatioIdPatio == patioId);
-
-        var total = await query.LongCountAsync();
-
-        var entidades = await query
-            .OrderBy(m => m.IdMarcadorArucoFixo)
-            .Skip((page - 1) * size)
-            .Take(size)
-            .ToListAsync();
-
-        var dtos = entidades.Select(MarcadorFixoMapper.ToDto).ToList();
-
-        var items = dtos.Select(dto =>
+        var items = pagedResult.Items.Select(dto =>
         {
             var links = new List<HateoasLink>
             {
@@ -124,13 +92,12 @@ public class MarcadorFixoController : ControllerBase
             return new Resource<MarcadorFixoDTO>(dto, links);
         });
 
-        var totalPages = (int)Math.Ceiling((double)total / size);
-
-        //Links da coleção com rota que inclui patioId
-        var collectionLinks = BuildPatioPagingLinks(patioId, page, size, totalPages).ToList();
+        var totalPages = (int)Math.Ceiling((double)pagedResult.Total / pagedResult.Size);
+        var collectionLinks = BuildPatioPagingLinks(patioId, pagedResult.Page, pagedResult.Size, totalPages).ToList();
         collectionLinks.Add(new("list-all", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET"));
 
-        var result = new PagedResult<Resource<MarcadorFixoDTO>>(items, page, size, total, collectionLinks);
+        var result = new PagedResult<Resource<MarcadorFixoDTO>>(items, pagedResult.Page, pagedResult.Size,
+            pagedResult.Total, collectionLinks);
         return Ok(result);
     }
 
@@ -141,13 +108,8 @@ public class MarcadorFixoController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Resource<MarcadorFixoDTO>>> GetByCodigoAruco([FromQuery] string codigoAruco)
     {
-        var entidade = await _context.MarcadoresFixos
-            .AsNoTracking()
-            .FirstOrDefaultAsync(m => m.CodigoAruco.ToLower() == codigoAruco.ToLower());
-
-        if (entidade == null) return NotFound();
-
-        var dto = MarcadorFixoMapper.ToDto(entidade);
+        var dto = await _service.GetByCodigoArucoAsync(codigoAruco);
+        if (dto is null) return NotFound();
 
         var links = new List<HateoasLink>
         {
@@ -168,21 +130,18 @@ public class MarcadorFixoController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<Resource<MarcadorFixoDTO>>> Create([FromBody] MarcadorFixoDTO dto)
     {
-        var entidade = MarcadorFixoMapper.ToEntity(dto);
-        _context.MarcadoresFixos.Add(entidade);
-        await _context.SaveChangesAsync();
+        var created = await _service.CreateAsync(dto);
 
-        var resp = MarcadorFixoMapper.ToDto(entidade);
         var links = new List<HateoasLink>
         {
-            new("self", Url.ActionHref(nameof(GetById), new { id = resp.IdMarcadorArucoFixo }), "GET"),
-            new("delete", Url.ActionHref(nameof(Delete), new { id = resp.IdMarcadorArucoFixo }), "DELETE"),
+            new("self", Url.ActionHref(nameof(GetById), new { id = created.IdMarcadorArucoFixo }), "GET"),
+            new("delete", Url.ActionHref(nameof(Delete), new { id = created.IdMarcadorArucoFixo }), "DELETE"),
             new("list", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET")
         };
 
         return CreatedAtAction(nameof(GetById),
-            new { id = resp.IdMarcadorArucoFixo },
-            new Resource<MarcadorFixoDTO>(resp, links));
+            new { id = created.IdMarcadorArucoFixo },
+            new Resource<MarcadorFixoDTO>(created, links));
     }
 
     [HttpDelete("{id}")]
@@ -191,16 +150,9 @@ public class MarcadorFixoController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete([FromRoute] int id)
-    {
-        var entidade = await _context.MarcadoresFixos.FindAsync(id);
-        if (entidade == null) return NotFound();
+        => (await _service.DeleteAsync(id)) ? NoContent() : NotFound();
 
-        _context.MarcadoresFixos.Remove(entidade);
-        await _context.SaveChangesAsync();
-        return NoContent();
-    }
-
-    // Método para auxiliar a paginação do endpoint com rota que inclui patioId
+    // Método auxiliar de paginação para rota com {patioId}
     private IEnumerable<HateoasLink> BuildPatioPagingLinks(int patioId, int page, int size, int totalPages)
     {
         var links = new List<HateoasLink>
