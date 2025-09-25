@@ -2,6 +2,7 @@ using challenge_api_dotnet.Data;
 using challenge_api_dotnet.Dtos;
 using challenge_api_dotnet.Hateoas;
 using challenge_api_dotnet.Mappers;
+using challenge_api_dotnet.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,8 +14,8 @@ namespace challenge_api_dotnet.Controllers;
 [Tags("Medições de Posição")]
 public class MedicaoPosicaoController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
-    public MedicaoPosicaoController(ApplicationDbContext context) => _context = context;
+    private readonly IMedicaoPosicaoService _service;
+    public MedicaoPosicaoController(IMedicaoPosicaoService service) => _service = service;
 
     [HttpGet]
     [EndpointSummary("Listar medições de posição")]
@@ -24,23 +25,9 @@ public class MedicaoPosicaoController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int size = 10)
     {
-        page = page < 1 ? 1 : page;
-        size = size is < 1 or > 100 ? 10 : size;
+        var paged = await _service.GetPagedAsync(page, size);
 
-        var query = _context.MedicoesPosicoes.AsNoTracking();
-
-        var total = await query.LongCountAsync();
-
-        var entidades = await query
-            .OrderBy(m => m.IdMedicao) 
-            .Skip((page - 1) * size)
-            .Take(size)
-            .ToListAsync();
-
-        var dtos = entidades.Select(MedicaoPosicaoMapper.ToDto).ToList();
-
-        
-        var items = dtos.Select(dto =>
+        var items = paged.Items.Select(dto =>
         {
             var links = new List<HateoasLink>
             {
@@ -48,17 +35,15 @@ public class MedicaoPosicaoController : ControllerBase
                 new("list", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET"),
                 new("create", Url.ActionHref(nameof(Create)), "POST")
             };
-
             return new Resource<MedicaoPosicaoDTO>(dto, links);
         });
 
-        var totalPages = (int)Math.Ceiling((double)total / size);
-
-        // Links da coleção
-        var collectionLinks = Url.PagingLinks(nameof(GetAll), page, size, totalPages).ToList();
+        var totalPages = (int)Math.Ceiling((double)paged.Total / paged.Size);
+        var collectionLinks = Url.PagingLinks(nameof(GetAll), paged.Page, paged.Size, totalPages).ToList();
         collectionLinks.Add(new("create", Url.ActionHref(nameof(Create)), "POST"));
 
-        var result = new PagedResult<Resource<MedicaoPosicaoDTO>>(items, page, size, total, collectionLinks);
+        var result =
+            new PagedResult<Resource<MedicaoPosicaoDTO>>(items, paged.Page, paged.Size, paged.Total, collectionLinks);
         return Ok(result);
     }
 
@@ -69,10 +54,8 @@ public class MedicaoPosicaoController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Resource<MedicaoPosicaoDTO>>> GetById([FromRoute] int id)
     {
-        var entidade = await _context.MedicoesPosicoes.FindAsync(id);
-        if (entidade == null) return NotFound();
-
-        var dto = MedicaoPosicaoMapper.ToDto(entidade);
+        var dto = await _service.GetByIdAsync(id);
+        if (dto is null) return NotFound();
 
         var links = new List<HateoasLink>
         {
@@ -93,24 +76,9 @@ public class MedicaoPosicaoController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int size = 10)
     {
-        page = page < 1 ? 1 : page;
-        size = size is < 1 or > 100 ? 10 : size;
+        var paged = await _service.GetByPosicaoIdPagedAsync(id, page, size);
 
-        var query = _context.MedicoesPosicoes
-            .AsNoTracking()
-            .Where(m => m.PosicaoIdPosicao == id);
-
-        var total = await query.LongCountAsync();
-
-        var entidades = await query
-            .OrderBy(m => m.IdMedicao)
-            .Skip((page - 1) * size)
-            .Take(size)
-            .ToListAsync();
-
-        var dtos = entidades.Select(MedicaoPosicaoMapper.ToDto).ToList();
-
-        var items = dtos.Select(dto =>
+        var items = paged.Items.Select(dto =>
         {
             var links = new List<HateoasLink>
             {
@@ -123,12 +91,12 @@ public class MedicaoPosicaoController : ControllerBase
             return new Resource<MedicaoPosicaoDTO>(dto, links);
         });
 
-        var totalPages = (int)Math.Ceiling((double)total / size);
-
-        var collectionLinks = BuildPosicaoPagingLinks(id, page, size, totalPages).ToList();
+        var totalPages = (int)Math.Ceiling((double)paged.Total / paged.Size);
+        var collectionLinks = BuildPosicaoPagingLinks(id, paged.Page, paged.Size, totalPages).ToList();
         collectionLinks.Add(new("list-all", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET"));
 
-        var result = new PagedResult<Resource<MedicaoPosicaoDTO>>(items, page, size, total, collectionLinks);
+        var result =
+            new PagedResult<Resource<MedicaoPosicaoDTO>>(items, paged.Page, paged.Size, paged.Total, collectionLinks);
         return Ok(result);
     }
 
@@ -141,24 +109,9 @@ public class MedicaoPosicaoController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int size = 10)
     {
-        page = page < 1 ? 1 : page;
-        size = size is < 1 or > 100 ? 10 : size;
+        var paged = await _service.GetByMarcadorIdPagedAsync(id, page, size);
 
-        var query = _context.MedicoesPosicoes
-            .AsNoTracking()
-            .Where(m => m.MarcadorFixoIdMarcadorArucoFixo == id);
-
-        var total = await query.LongCountAsync();
-
-        var entidades = await query
-            .OrderBy(m => m.IdMedicao)
-            .Skip((page - 1) * size)
-            .Take(size)
-            .ToListAsync();
-
-        var dtos = entidades.Select(MedicaoPosicaoMapper.ToDto).ToList();
-
-        var items = dtos.Select(dto =>
+        var items = paged.Items.Select(dto =>
         {
             var links = new List<HateoasLink>
             {
@@ -170,12 +123,12 @@ public class MedicaoPosicaoController : ControllerBase
             return new Resource<MedicaoPosicaoDTO>(dto, links);
         });
 
-        var totalPages = (int)Math.Ceiling((double)total / size);
-
-        var collectionLinks = BuildMarcadorPagingLinks(id, page, size, totalPages).ToList();
+        var totalPages = (int)Math.Ceiling((double)paged.Total / paged.Size);
+        var collectionLinks = BuildMarcadorPagingLinks(id, paged.Page, paged.Size, totalPages).ToList();
         collectionLinks.Add(new("list-all", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET"));
 
-        var result = new PagedResult<Resource<MedicaoPosicaoDTO>>(items, page, size, total, collectionLinks);
+        var result =
+            new PagedResult<Resource<MedicaoPosicaoDTO>>(items, paged.Page, paged.Size, paged.Total, collectionLinks);
         return Ok(result);
     }
 
@@ -185,10 +138,7 @@ public class MedicaoPosicaoController : ControllerBase
     [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
     public async Task<ActionResult<int>> CountByPosicaoId([FromRoute] int id)
     {
-        var count = await _context.MedicoesPosicoes
-            .AsNoTracking()
-            .CountAsync(m => m.PosicaoIdPosicao == id);
-
+        var count = await _service.CountByPosicaoIdAsync(id);
         return Ok(count);
     }
 
@@ -200,23 +150,20 @@ public class MedicaoPosicaoController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<Resource<MedicaoPosicaoDTO>>> Create([FromBody] MedicaoPosicaoDTO dto)
     {
-        var entidade = MedicaoPosicaoMapper.ToEntity(dto);
-        _context.MedicoesPosicoes.Add(entidade);
-        await _context.SaveChangesAsync();
+        var created = await _service.CreateAsync(dto);
 
-        var resp = MedicaoPosicaoMapper.ToDto(entidade);
         var links = new List<HateoasLink>
         {
-            new("self", Url.ActionHref(nameof(GetById), new { id = resp.IdMedicao }), "GET"),
+            new("self", Url.ActionHref(nameof(GetById), new { id = created.IdMedicao }), "GET"),
             new("list", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET")
         };
 
         return CreatedAtAction(nameof(GetById),
-            new { id = resp.IdMedicao },
-            new Resource<MedicaoPosicaoDTO>(resp, links));
+            new { id = created.IdMedicao },
+            new Resource<MedicaoPosicaoDTO>(created, links));
     }
 
-    // Método auxiliar para rotas com parâmetro no caminho
+    // Métodos auxiliares de paginação
     private IEnumerable<HateoasLink> BuildPosicaoPagingLinks(int posicaoId, int page, int size, int totalPages)
     {
         var links = new List<HateoasLink>

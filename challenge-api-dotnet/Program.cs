@@ -23,6 +23,8 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options => { options.UseOracle(connectionString); });
 builder.Services.AddScoped<IMarcadorArucoMovelService, MarcadorArucoMovelService>();
 builder.Services.AddScoped<IMarcadorFixoService, MarcadorFixoService>();
+builder.Services.AddScoped<IMedicaoPosicaoService, MedicaoPosicaoService>();
+
 
 var app = builder.Build();
 
