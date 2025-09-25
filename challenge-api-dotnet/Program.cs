@@ -21,12 +21,14 @@ builder.Services.AddSwaggerGen(c =>
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options => { options.UseOracle(connectionString); });
+
 builder.Services.AddScoped<IMarcadorArucoMovelService, MarcadorArucoMovelService>();
 builder.Services.AddScoped<IMarcadorFixoService, MarcadorFixoService>();
 builder.Services.AddScoped<IMedicaoPosicaoService, MedicaoPosicaoService>();
 builder.Services.AddScoped<IMotoService, MotoService>();
 builder.Services.AddScoped<IPatioService, PatioService>();
 builder.Services.AddScoped<IPosicaoService, PosicaoService>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
 
 var app = builder.Build();
