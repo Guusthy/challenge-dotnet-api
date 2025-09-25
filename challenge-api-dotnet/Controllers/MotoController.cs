@@ -2,6 +2,7 @@ using challenge_api_dotnet.Data;
 using challenge_api_dotnet.Dtos;
 using challenge_api_dotnet.Hateoas;
 using challenge_api_dotnet.Mappers;
+using challenge_api_dotnet.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,9 +14,8 @@ namespace challenge_api_dotnet.Controllers;
 [Tags("Motos")]
 public class MotoController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
-
-    public MotoController(ApplicationDbContext context) => _context = context;
+    private readonly IMotoService _service;
+    public MotoController(IMotoService service) => _service = service;
 
     [HttpGet]
     [EndpointSummary("Listar motos")]
@@ -25,22 +25,9 @@ public class MotoController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int size = 10)
     {
-        page = page < 1 ? 1 : page;
-        size = size is < 1 or > 100 ? 10 : size;
+        var paged = await _service.GetPagedAsync(page, size);
 
-        var query = _context.Motos.AsNoTracking();
-
-        var total = await query.LongCountAsync();
-
-        var entidades = await query
-            .OrderBy(m => m.IdMoto)
-            .Skip((page - 1) * size)
-            .Take(size)
-            .ToListAsync();
-
-        var dtos = entidades.Select(MotoMapper.ToDto).ToList();
-
-        var items = dtos.Select(dto =>
+        var items = paged.Items.Select(dto =>
         {
             var links = new List<HateoasLink>
             {
@@ -53,14 +40,13 @@ public class MotoController : ControllerBase
             return new Resource<MotoDTO>(dto, links);
         });
 
-        var totalPages = (int)Math.Ceiling((double)total / size);
-        var collectionLinks = Url.PagingLinks(nameof(GetAll), page, size, totalPages).ToList();
+        var totalPages = (int)Math.Ceiling((double)paged.Total / paged.Size);
+        var collectionLinks = Url.PagingLinks(nameof(GetAll), paged.Page, paged.Size, totalPages).ToList();
         collectionLinks.Add(new("create", Url.ActionHref(nameof(Create)), "POST"));
 
-        var result = new PagedResult<Resource<MotoDTO>>(items, page, size, total, collectionLinks);
+        var result = new PagedResult<Resource<MotoDTO>>(items, paged.Page, paged.Size, paged.Total, collectionLinks);
         return Ok(result);
     }
-
 
     [HttpGet("{id}")]
     [EndpointSummary("Obter moto por ID")]
@@ -69,10 +55,8 @@ public class MotoController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Resource<MotoDTO>>> GetById([FromRoute] int id)
     {
-        var moto = await _context.Motos.FindAsync(id);
-        if (moto == null) return NotFound();
-
-        var dto = MotoMapper.ToDto(moto);
+        var dto = await _service.GetByIdAsync(id);
+        if (dto is null) return NotFound();
 
         var links = new List<HateoasLink>
         {
@@ -95,24 +79,9 @@ public class MotoController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int size = 10)
     {
-        page = page < 1 ? 1 : page;
-        size = size is < 1 or > 100 ? 10 : size;
+        var paged = await _service.GetByPlacaPagedAsync(placa, page, size);
 
-        var query = _context.Motos
-            .AsNoTracking()
-            .Where(m => m.Placa.StartsWith(placa));
-
-        var total = await query.LongCountAsync();
-
-        var entidades = await query
-            .OrderBy(m => m.IdMoto)
-            .Skip((page - 1) * size)
-            .Take(size)
-            .ToListAsync();
-
-        var dtos = entidades.Select(MotoMapper.ToDto).ToList();
-
-        var items = dtos.Select(dto =>
+        var items = paged.Items.Select(dto =>
         {
             var links = new List<HateoasLink>
             {
@@ -125,11 +94,11 @@ public class MotoController : ControllerBase
             return new Resource<MotoDTO>(dto, links);
         });
 
-        var totalPages = (int)Math.Ceiling((double)total / size);
-        var collectionLinks = BuildPlacaPagingLinks(placa, page, size, totalPages).ToList();
+        var totalPages = (int)Math.Ceiling((double)paged.Total / paged.Size);
+        var collectionLinks = BuildPlacaPagingLinks(placa, paged.Page, paged.Size, totalPages).ToList();
         collectionLinks.Add(new("list-all", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET"));
 
-        var result = new PagedResult<Resource<MotoDTO>>(items, page, size, total, collectionLinks);
+        var result = new PagedResult<Resource<MotoDTO>>(items, paged.Page, paged.Size, paged.Total, collectionLinks);
         return Ok(result);
     }
 
@@ -142,24 +111,9 @@ public class MotoController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int size = 10)
     {
-        page = page < 1 ? 1 : page;
-        size = size is < 1 or > 100 ? 10 : size;
+        var paged = await _service.GetByStatusPagedAsync(status, page, size);
 
-        var query = _context.Motos
-            .AsNoTracking()
-            .Where(m => m.Status.ToLower() == status.ToLower());
-
-        var total = await query.LongCountAsync();
-
-        var entidades = await query
-            .OrderBy(m => m.IdMoto)
-            .Skip((page - 1) * size)
-            .Take(size)
-            .ToListAsync();
-
-        var dtos = entidades.Select(MotoMapper.ToDto).ToList();
-
-        var items = dtos.Select(dto =>
+        var items = paged.Items.Select(dto =>
         {
             var links = new List<HateoasLink>
             {
@@ -172,11 +126,11 @@ public class MotoController : ControllerBase
             return new Resource<MotoDTO>(dto, links);
         });
 
-        var totalPages = (int)Math.Ceiling((double)total / size);
-        var collectionLinks = BuildStatusPagingLinks(status, page, size, totalPages).ToList();
+        var totalPages = (int)Math.Ceiling((double)paged.Total / paged.Size);
+        var collectionLinks = BuildStatusPagingLinks(status, paged.Page, paged.Size, totalPages).ToList();
         collectionLinks.Add(new("list-all", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET"));
 
-        var result = new PagedResult<Resource<MotoDTO>>(items, page, size, total, collectionLinks);
+        var result = new PagedResult<Resource<MotoDTO>>(items, paged.Page, paged.Size, paged.Total, collectionLinks);
         return Ok(result);
     }
 
@@ -185,14 +139,7 @@ public class MotoController : ControllerBase
     [EndpointDescription("Retorna as posições registradas para a moto informada.")]
     [ProducesResponseType(typeof(List<PosicaoDTO>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<PosicaoDTO>>> GetByPosicoesMoto([FromRoute] int id)
-    {
-        var posicoes = await _context.Posicoes
-            .AsNoTracking()
-            .Where(p => p.MotoIdMoto == id)
-            .ToListAsync();
-
-        return posicoes.Select(PosicaoMapper.ToDto).ToList();
-    }
+        => await _service.GetPosicoesByMotoAsync(id);
 
     [HttpPost]
     [Consumes("application/json")]
@@ -202,23 +149,19 @@ public class MotoController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<Resource<MotoDTO>>> Create([FromBody] MotoCreateDTO dto)
     {
-        var moto = MotoMapper.ToEntity(dto);
-        moto.DataCadastro = DateTime.Now;
-        _context.Add(moto);
-        await _context.SaveChangesAsync();
+        var created = await _service.CreateAsync(dto);
 
-        var response = MotoMapper.ToDto(moto);
         var links = new List<HateoasLink>
         {
-            new("self", Url.ActionHref(nameof(GetById), new { id = moto.IdMoto }), "GET"),
-            new("update", Url.ActionHref(nameof(Update), new { id = moto.IdMoto }), "PUT"),
-            new("delete", Url.ActionHref(nameof(Delete), new { id = moto.IdMoto }), "DELETE"),
+            new("self", Url.ActionHref(nameof(GetById), new { id = created.IdMoto }), "GET"),
+            new("update", Url.ActionHref(nameof(Update), new { id = created.IdMoto }), "PUT"),
+            new("delete", Url.ActionHref(nameof(Delete), new { id = created.IdMoto }), "DELETE"),
             new("list", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET")
         };
 
         return CreatedAtAction(nameof(GetById),
-            new { id = moto.IdMoto },
-            new Resource<MotoDTO>(response, links));
+            new { id = created.IdMoto },
+            new Resource<MotoDTO>(created, links));
     }
 
     [HttpPut("{id}")]
@@ -232,16 +175,9 @@ public class MotoController : ControllerBase
     {
         if (id != dto.IdMoto) return BadRequest();
 
-        var moto = await _context.Motos.FindAsync(id);
-        if (moto == null) return NotFound();
+        var updated = await _service.UpdateAsync(id, dto);
+        if (updated is null) return NotFound();
 
-        moto.Placa = dto.Placa;
-        moto.Modelo = dto.Modelo;
-        moto.Status = dto.Status;
-
-        await _context.SaveChangesAsync();
-
-        var response = MotoMapper.ToDto(moto);
         var links = new List<HateoasLink>
         {
             new("self", Url.ActionHref(nameof(GetById), new { id }), "GET"),
@@ -249,7 +185,7 @@ public class MotoController : ControllerBase
             new("list", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET")
         };
 
-        return Ok(new Resource<MotoDTO>(response, links));
+        return Ok(new Resource<MotoDTO>(updated, links));
     }
 
     [HttpDelete("{id}")]
@@ -258,16 +194,9 @@ public class MotoController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete([FromRoute] int id)
-    {
-        var moto = await _context.Motos.FindAsync(id);
-        if (moto == null) return NotFound();
+        => (await _service.DeleteAsync(id)) ? NoContent() : NotFound();
 
-        _context.Motos.Remove(moto);
-        await _context.SaveChangesAsync();
-        return NoContent();
-    }
-
-    // Métodos auxiliares para rotas com parâmetro no caminho
+    // Métodos auxiliares de paginação para rotas com parâmetro no path
     private IEnumerable<HateoasLink> BuildPlacaPagingLinks(string placa, int page, int size, int totalPages)
     {
         var links = new List<HateoasLink>

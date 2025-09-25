@@ -24,6 +24,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => { options.UseOrac
 builder.Services.AddScoped<IMarcadorArucoMovelService, MarcadorArucoMovelService>();
 builder.Services.AddScoped<IMarcadorFixoService, MarcadorFixoService>();
 builder.Services.AddScoped<IMedicaoPosicaoService, MedicaoPosicaoService>();
+builder.Services.AddScoped<IMotoService, MotoService>();
 
 
 var app = builder.Build();
