@@ -2,6 +2,7 @@ using challenge_api_dotnet.Data;
 using challenge_api_dotnet.Dtos;
 using challenge_api_dotnet.Hateoas;
 using challenge_api_dotnet.Mappers;
+using challenge_api_dotnet.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,8 +14,8 @@ namespace challenge_api_dotnet.Controllers;
 [Tags("Pátios")]
 public class PatioController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
-    public PatioController(ApplicationDbContext context) => _context = context;
+    private readonly IPatioService _service;
+    public PatioController(IPatioService service) => _service = service;
 
     [HttpGet]
     [EndpointSummary("Listar pátios")]
@@ -24,22 +25,9 @@ public class PatioController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int size = 10)
     {
-        page = page < 1 ? 1 : page;
-        size = size is < 1 or > 100 ? 10 : size;
+        var paged = await _service.GetPagedAsync(page, size);
 
-        var query = _context.Patios.AsNoTracking();
-
-        var total = await query.LongCountAsync();
-
-        var entidades = await query
-            .OrderBy(p => p.IdPatio)
-            .Skip((page - 1) * size)
-            .Take(size)
-            .ToListAsync();
-
-        var dtos = entidades.Select(PatioMapper.ToDto).ToList();
-
-        var items = dtos.Select(dto =>
+        var items = paged.Items.Select(dto =>
         {
             var links = new List<HateoasLink>
             {
@@ -53,11 +41,11 @@ public class PatioController : ControllerBase
             return new Resource<PatioDTO>(dto, links);
         });
 
-        var totalPages = (int)Math.Ceiling((double)total / size);
-        var collectionLinks = Url.PagingLinks(nameof(GetAll), page, size, totalPages).ToList();
+        var totalPages = (int)Math.Ceiling((double)paged.Total / paged.Size);
+        var collectionLinks = Url.PagingLinks(nameof(GetAll), paged.Page, paged.Size, totalPages).ToList();
         collectionLinks.Add(new("create", Url.ActionHref(nameof(Create)), "POST"));
 
-        var result = new PagedResult<Resource<PatioDTO>>(items, page, size, total, collectionLinks);
+        var result = new PagedResult<Resource<PatioDTO>>(items, paged.Page, paged.Size, paged.Total, collectionLinks);
         return Ok(result);
     }
 
@@ -68,10 +56,8 @@ public class PatioController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Resource<PatioDTO>>> GetById([FromRoute] int id)
     {
-        var entidade = await _context.Patios.FindAsync(id);
-        if (entidade == null) return NotFound();
-
-        var dto = PatioMapper.ToDto(entidade);
+        var dto = await _service.GetByIdAsync(id);
+        if (dto is null) return NotFound();
 
         var links = new List<HateoasLink>
         {
@@ -94,24 +80,9 @@ public class PatioController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int size = 10)
     {
-        page = page < 1 ? 1 : page;
-        size = size is < 1 or > 100 ? 10 : size;
+        var paged = await _service.GetWithRelationsPagedAsync(page, size);
 
-        var query = _context.Patios
-            .AsNoTracking()
-            .Where(p => p.Usuarios.Any() || p.Posicoes.Any() || p.MarcadoresFixos.Any());
-
-        var total = await query.LongCountAsync();
-
-        var entidades = await query
-            .OrderBy(p => p.IdPatio)
-            .Skip((page - 1) * size)
-            .Take(size)
-            .ToListAsync();
-
-        var dtos = entidades.Select(PatioMapper.ToDto).ToList();
-
-        var items = dtos.Select(dto =>
+        var items = paged.Items.Select(dto =>
         {
             var links = new List<HateoasLink>
             {
@@ -125,11 +96,11 @@ public class PatioController : ControllerBase
             return new Resource<PatioDTO>(dto, links);
         });
 
-        var totalPages = (int)Math.Ceiling((double)total / size);
-        var collectionLinks = Url.PagingLinks(nameof(GetPatiosComMotos), page, size, totalPages).ToList();
+        var totalPages = (int)Math.Ceiling((double)paged.Total / paged.Size);
+        var collectionLinks = Url.PagingLinks(nameof(GetPatiosComMotos), paged.Page, paged.Size, totalPages).ToList();
         collectionLinks.Add(new("list-all", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET"));
 
-        var result = new PagedResult<Resource<PatioDTO>>(items, page, size, total, collectionLinks);
+        var result = new PagedResult<Resource<PatioDTO>>(items, paged.Page, paged.Size, paged.Total, collectionLinks);
         return Ok(result);
     }
 
@@ -138,17 +109,7 @@ public class PatioController : ControllerBase
     [EndpointDescription("Retorna todas as motos atualmente associadas ao pátio informado.")]
     [ProducesResponseType(typeof(List<MotoDTO>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<MotoDTO>>> GetMotosPorPatio([FromRoute] int id)
-    {
-        var motos = await _context.Posicoes
-            .AsNoTracking()
-            .Where(p => p.PatioIdPatio == id && p.MotoIdMoto != null)
-            .Include(p => p.MotoIdMotoNavigation)
-            .Select(p => p.MotoIdMotoNavigation)
-            .Distinct()
-            .ToListAsync();
-
-        return motos.Select(MotoMapper.ToDto).ToList();
-    }
+        => await _service.GetMotosByPatioAsync(id);
 
     [HttpPost]
     [Consumes("application/json")]
@@ -158,23 +119,20 @@ public class PatioController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<Resource<PatioDTO>>> Create([FromBody] PatioDTO dto)
     {
-        var entidade = PatioMapper.ToEntity(dto);
-        _context.Patios.Add(entidade);
-        await _context.SaveChangesAsync();
+        var created = await _service.CreateAsync(dto);
 
-        var response = PatioMapper.ToDto(entidade);
         var links = new List<HateoasLink>
         {
-            new("self", Url.ActionHref(nameof(GetById), new { id = entidade.IdPatio }), "GET"),
-            new("update", Url.ActionHref(nameof(Update), new { id = entidade.IdPatio }), "PUT"),
-            new("delete", Url.ActionHref(nameof(Delete), new { id = entidade.IdPatio }), "DELETE"),
+            new("self", Url.ActionHref(nameof(GetById), new { id = created.IdPatio }), "GET"),
+            new("update", Url.ActionHref(nameof(Update), new { id = created.IdPatio }), "PUT"),
+            new("delete", Url.ActionHref(nameof(Delete), new { id = created.IdPatio }), "DELETE"),
             new("list", Url.ActionHref(nameof(GetAll), new { page = 1, size = 10 }), "GET"),
-            new("motos", Url.ActionHref(nameof(GetMotosPorPatio), new { id = entidade.IdPatio }), "GET")
+            new("motos", Url.ActionHref(nameof(GetMotosPorPatio), new { id = created.IdPatio }), "GET")
         };
 
         return CreatedAtAction(nameof(GetById),
-            new { id = entidade.IdPatio },
-            new Resource<PatioDTO>(response, links));
+            new { id = created.IdPatio },
+            new Resource<PatioDTO>(created, links));
     }
 
     [HttpPut("{id}")]
@@ -188,16 +146,9 @@ public class PatioController : ControllerBase
     {
         if (id != dto.IdPatio) return BadRequest();
 
-        var entidade = await _context.Patios.FindAsync(id);
-        if (entidade == null) return NotFound();
+        var updated = await _service.UpdateAsync(id, dto);
+        if (updated is null) return NotFound();
 
-        entidade.Nome = dto.Nome;
-        entidade.Localizacao = dto.Localizacao;
-        entidade.Descricao = dto.Descricao;
-
-        await _context.SaveChangesAsync();
-
-        var response = PatioMapper.ToDto(entidade);
         var links = new List<HateoasLink>
         {
             new("self", Url.ActionHref(nameof(GetById), new { id }), "GET"),
@@ -206,7 +157,7 @@ public class PatioController : ControllerBase
             new("motos", Url.ActionHref(nameof(GetMotosPorPatio), new { id }), "GET")
         };
 
-        return Ok(new Resource<PatioDTO>(response, links));
+        return Ok(new Resource<PatioDTO>(updated, links));
     }
 
     [HttpDelete("{id}")]
@@ -215,12 +166,5 @@ public class PatioController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete([FromRoute] int id)
-    {
-        var entidade = await _context.Patios.FindAsync(id);
-        if (entidade == null) return NotFound();
-
-        _context.Patios.Remove(entidade);
-        await _context.SaveChangesAsync();
-        return NoContent();
-    }
+        => (await _service.DeleteAsync(id)) ? NoContent() : NotFound();
 }
