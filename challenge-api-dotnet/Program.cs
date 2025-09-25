@@ -26,6 +26,7 @@ builder.Services.AddScoped<IMarcadorFixoService, MarcadorFixoService>();
 builder.Services.AddScoped<IMedicaoPosicaoService, MedicaoPosicaoService>();
 builder.Services.AddScoped<IMotoService, MotoService>();
 builder.Services.AddScoped<IPatioService, PatioService>();
+builder.Services.AddScoped<IPosicaoService, PosicaoService>();
 
 
 var app = builder.Build();
