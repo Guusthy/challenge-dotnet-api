@@ -10,23 +10,27 @@ Este projeto propõe uma solução tecnológica que visa melhorar a eficiência 
 
 - Cálculo preciso da posição das motos por trilateração, com base em distâncias medidas entre marcadores ArUco fixos e móveis instalados no ambiente (fixos) e nos veículos (móveis);
 - Armazenamento e rastreamento histórico de posições para auditoria e controle de movimentação;
-- Integração via API RESTful desenvolvida com ASP.NET Core e Entity Framework Core, seguindo boas práticas de arquitetura, documentação (Scalar) e uso de DTOs.
+- Integração via API RESTful desenvolvida com ASP.NET Core e Entity Framework Core, seguindo boas práticas de arquitetura, documentação (Swagger/OpenAPI) e uso de DTOs.
 
-Público-alvo: Funcionários responsáveis pela gestão de pátios da MOTTU
+**Público-alvo:** Funcionários responsáveis pela gestão de pátios da MOTTU
 
 A API será consumida por uma aplicação móvel voltada aos operadores dos pátios, que permitirá:
 
 - Visualização de um mapa digital com as posições em tempo real das motos;
 - Consulta interativa: ao clicar sobre uma moto no mapa, o app exibe suas informações detalhadas (placa, modelo, status, histórico de localização etc.)
 
+---
+
 ## Tecnologias Utilizadas
 
 - ASP.NET Core 8 (Controllers)
 - Entity Framework Core
 - Oracle Database (via Oracle EF Core Provider)
-- Scalar (OpenAPI)
+- Swagger (OpenAPI 3)
 - Docker (em desenvolvimento)
 - Git e GitHub
+
+---
 
 ## Instalação e Execução
 
@@ -39,12 +43,35 @@ A API será consumida por uma aplicação móvel voltada aos operadores dos pát
     cd challenge-dotnet-api
     ```
 3. Configure a connection string no `appsettings.json` para o banco Oracle.
+
+   Exemplo de configuração:
+   ```json
+   "ConnectionStrings": {
+     "DefaultConnection": "User Id=seu-id;Password=sua-senha;Data Source=oracle.fiap.com.br:1521/orcl"
+   }
+   ```
+   > Substitua `seu-id` pelo seu RM e informe a senha fornecida pela FIAP.  
+
 4. Rode a aplicação:
     ```bash
     dotnet run
     ```
 5. Acesse a documentação da API:
-    - Scalar: `http://localhost:5087/scalar`
+    - Swagger: `http://localhost:5087/swagger`
+
+---
+
+## Swagger / OpenAPI
+
+O projeto utiliza o **Swagger** para documentação interativa da API.  
+Foram configurados:  
+- Descrição dos endpoints e parâmetros  
+- Exemplos de payloads de requisição e resposta  
+- Modelos de dados expostos automaticamente  
+
+Com isso, é possível explorar e testar a API diretamente via navegador.
+
+---
 
 ## Endpoints da API
 
@@ -58,6 +85,17 @@ A API será consumida por uma aplicação móvel voltada aos operadores dos pát
 - `GET /api/moto/status/{status}`
 - `GET /api/moto/{id}/posicoes`
 
+**Exemplo de payload (POST /api/moto):**
+```json
+{
+  "placa": "ABC1D23",
+  "modelo": "Honda CG 160",
+  "status": "ATIVA"
+}
+```
+
+---
+
 ### `/api/posicao`
 - `GET /api/posicao`
 - `POST /api/posicao`
@@ -68,6 +106,18 @@ A API será consumida por uma aplicação móvel voltada aos operadores dos pát
 - `GET /api/posicao/historico/{motoId}`
 - `GET /api/posicao/motos-revisao`
 
+**Exemplo de payload (POST /api/posicao):**
+```json
+{
+  "motoId": 1,
+  "coordenadaX": 10.5,
+  "coordenadaY": 7.2,
+  "dataHora": "2025-09-28T14:30:00"
+}
+```
+
+---
+
 ### `/api/patio`
 - `GET /api/patio`
 - `POST /api/patio`
@@ -77,6 +127,17 @@ A API será consumida por uma aplicação móvel voltada aos operadores dos pát
 - `GET /api/patio/com-motos`
 - `GET /api/patio/{id}/motos`
 
+**Exemplo de payload (POST /api/patio):**
+```json
+{
+  "nome": "Pátio Zona Leste",
+  "endereco": "Av. Exemplo, 123",
+  "capacidade": 50
+}
+```
+
+---
+
 ### `/api/usuario`
 - `GET /api/usuario`
 - `POST /api/usuario`
@@ -84,6 +145,8 @@ A API será consumida por uma aplicação móvel voltada aos operadores dos pát
 - `PUT /api/usuario/{id}`
 - `DELETE /api/usuario/{id}`
 - `GET /api/usuario/email/{email}`
+
+---
 
 ### `/api/marcador-movel`
 - `GET /api/marcador-movel`
@@ -94,6 +157,8 @@ A API será consumida por uma aplicação móvel voltada aos operadores dos pát
 - `GET /api/marcador-movel/moto/{idMoto}`
 - `GET /api/marcador-movel/busca`
 
+---
+
 ### `/api/marcador-fixo`
 - `GET /api/marcador-fixo`
 - `POST /api/marcador-fixo`
@@ -101,6 +166,8 @@ A API será consumida por uma aplicação móvel voltada aos operadores dos pát
 - `DELETE /api/marcador-fixo/{id}`
 - `GET /api/marcador-fixo/patio/{patioId}`
 - `GET /api/marcador-fixo/busca`
+
+---
 
 ### `/api/medicao-posicao`
 - `GET /api/medicao-posicao`
@@ -111,23 +178,26 @@ A API será consumida por uma aplicação móvel voltada aos operadores dos pát
 - `GET /api/medicao-posicao/contagem/posicao/{id}`
 - `DELETE /api/medicao-posicao/{id}`
 
+---
 
 ## Estrutura do Banco de Dados
 
 O banco de dados Oracle contém as seguintes entidades principais:
 
-- **Moto** — representa cada moto com placa, modelo e status.
-- **Patio** — identifica os locais físicos.
-- **Posicao** — armazena coordenadas já calculadas.
-- **MarcadorFixo / MarcadorArucoMovel** — usados na trilateração com ArUco.
-- **MedicaoPosicao** — distância entre marcador fixo e moto para cálculo de posição. 
-- **Usuario** — controle de acesso vinculado ao pátio.
+- **Moto** — representa cada moto com placa, modelo e status.  
+- **Patio** — identifica os locais físicos.  
+- **Posicao** — armazena coordenadas já calculadas.  
+- **MarcadorFixo / MarcadorArucoMovel** — usados na trilateração com ArUco.  
+- **MedicaoPosicao** — distância entre marcador fixo e moto para cálculo de posição.  
+- **Usuario** — controle de acesso vinculado ao pátio.  
+
+---
 
 ## Alunos
 
 - Thiago Renatino Paulino — RM556934  
 - Cauan Matos Moura — RM558821  
-- Gustavo Roberto — RM558033
+- Gustavo Roberto — RM558033  
 
 ---
 
