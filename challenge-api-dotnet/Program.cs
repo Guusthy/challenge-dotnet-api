@@ -3,9 +3,11 @@ using System.Text;
 using challenge_api_dotnet.Configs;
 using challenge_api_dotnet.Data;
 using challenge_api_dotnet.Hateoas;
+using challenge_api_dotnet.Models;
 using challenge_api_dotnet.Services;
 using challenge_api_dotnet.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -22,6 +24,29 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1",
         Description = "API do Challenge – gestão de motos/pátios."
     });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Informe o {token}"
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
 });
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var privateKey = jwtSection["PrivateKey"] ?? throw new InvalidOperationException("Jwt:PrivateKey não está configurado.");
@@ -31,6 +56,8 @@ var audience = jwtSection["Audience"] ?? throw new InvalidOperationException("Jw
 Configuration.SetJwtOptions(privateKey, issuer, audience);
 
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
 
 var signingKeyBytes = Encoding.UTF8.GetBytes(Configuration.PrivateKey);
 if (signingKeyBytes.Length < 16)

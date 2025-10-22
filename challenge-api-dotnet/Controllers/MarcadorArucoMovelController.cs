@@ -5,12 +5,14 @@ using challenge_api_dotnet.Hateoas;
 using challenge_api_dotnet.Mappers;
 using challenge_api_dotnet.Models;
 using challenge_api_dotnet.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace challenge_api_dotnet.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/marcadores-moveis")]
 [Produces("application/json")]
 [Tags("Marcadores ArUco Móveis")]

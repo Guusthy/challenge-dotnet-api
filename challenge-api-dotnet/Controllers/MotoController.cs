@@ -3,12 +3,14 @@ using challenge_api_dotnet.Dtos;
 using challenge_api_dotnet.Hateoas;
 using challenge_api_dotnet.Mappers;
 using challenge_api_dotnet.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace challenge_api_dotnet.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/motos")]
 [Produces("application/json")]
 [Tags("Motos")]
