@@ -65,6 +65,7 @@ public sealed class UsuarioService(ApplicationDbContext db) : IUsuarioService
         entity.Email = dto.Email;
         entity.Senha = dto.Senha;
         entity.Status = dto.Status;
+        entity.Tipo = dto.Tipo;
         entity.PatioIdPatio = dto.PatioId;
 
         await _db.SaveChangesAsync();

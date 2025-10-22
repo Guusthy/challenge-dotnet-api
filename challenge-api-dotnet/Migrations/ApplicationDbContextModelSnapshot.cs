@@ -3,7 +3,6 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Oracle.EntityFrameworkCore.Metadata;
 using challenge_api_dotnet.Data;
 
 #nullable disable
@@ -15,22 +14,32 @@ namespace challenge_api_dotnet.Migrations
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
-#pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("RM556934")
                 .HasAnnotation("ProductVersion", "9.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            OracleModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            modelBuilder.HasSequence<int>("SEQ_PATIO_CH", "RM556934").StartsAt(1L).IncrementsBy(1);
+
+            modelBuilder.HasSequence<int>("SEQ_USUARIO_CH", "RM556934").StartsAt(1L).IncrementsBy(1);
+
+            modelBuilder.HasSequence<int>("SEQ_MOTO_CH", "RM556934").StartsAt(1L).IncrementsBy(1);
+
+            modelBuilder.HasSequence<int>("SEQ_POS_CH", "RM556934").StartsAt(1L).IncrementsBy(1);
+
+            modelBuilder.HasSequence<int>("SEQ_MARCADOR_F_CH", "RM556934").StartsAt(1L).IncrementsBy(1);
+
+            modelBuilder.HasSequence<int>("SEQ_MARCADOR_M_CH", "RM556934").StartsAt(1L).IncrementsBy(1);
+
+            modelBuilder.HasSequence<int>("SEQ_MEDICAO_CH", "RM556934").StartsAt(1L).IncrementsBy(1);
 
             modelBuilder.Entity("challenge_api_dotnet.Models.MarcadorArucoMovel", b =>
                 {
-                    b.Property<decimal>("IdMarcadorMovel")
+                    b.Property<int>("IdMarcadorMovel")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(38)")
-                        .HasColumnName("ID_MARCADOR_MOVEL");
-
-                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<decimal>("IdMarcadorMovel"));
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("ID_MARCADOR_MOVEL")
+                        .HasDefaultValueSql("\"RM556934\".\"SEQ_MARCADOR_M_CH\".NEXTVAL");
 
                     b.Property<string>("CodigoAruco")
                         .HasMaxLength(50)
@@ -42,8 +51,8 @@ namespace challenge_api_dotnet.Migrations
                         .HasColumnType("DATE")
                         .HasColumnName("DATA_INSTALACAO");
 
-                    b.Property<decimal?>("MotoIdMoto")
-                        .HasColumnType("NUMBER(38)")
+                    b.Property<int?>("MotoIdMoto")
+                        .HasColumnType("NUMBER(10)")
                         .HasColumnName("MOTO_ID_MOTO");
 
                     b.HasKey("IdMarcadorMovel");
@@ -55,12 +64,11 @@ namespace challenge_api_dotnet.Migrations
 
             modelBuilder.Entity("challenge_api_dotnet.Models.MarcadorFixo", b =>
                 {
-                    b.Property<decimal>("IdMarcadorArucoFixo")
+                    b.Property<int>("IdMarcadorArucoFixo")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(38)")
-                        .HasColumnName("ID_MARCADOR_ARUCO_FIXO");
-
-                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<decimal>("IdMarcadorArucoFixo"));
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("ID_MARCADOR_ARUCO_FIXO")
+                        .HasDefaultValueSql("\"RM556934\".\"SEQ_MARCADOR_F_CH\".NEXTVAL");
 
                     b.Property<string>("CodigoAruco")
                         .HasMaxLength(50)
@@ -68,16 +76,16 @@ namespace challenge_api_dotnet.Migrations
                         .HasColumnType("VARCHAR2(50)")
                         .HasColumnName("CODIGO_ARUCO");
 
-                    b.Property<decimal?>("PatioIdPatio")
-                        .HasColumnType("NUMBER(38)")
+                    b.Property<int?>("PatioIdPatio")
+                        .HasColumnType("NUMBER(10)")
                         .HasColumnName("PATIO_ID_PATIO");
 
                     b.Property<decimal?>("XPos")
-                        .HasColumnType("FLOAT")
+                        .HasColumnType("FLOAT(10)")
                         .HasColumnName("X_POS");
 
                     b.Property<decimal?>("YPos")
-                        .HasColumnType("FLOAT")
+                        .HasColumnType("FLOAT(10)")
                         .HasColumnName("Y_POS");
 
                     b.HasKey("IdMarcadorArucoFixo");
@@ -89,23 +97,22 @@ namespace challenge_api_dotnet.Migrations
 
             modelBuilder.Entity("challenge_api_dotnet.Models.MedicaoPosicao", b =>
                 {
-                    b.Property<decimal>("IdMedicao")
+                    b.Property<int>("IdMedicao")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(38)")
-                        .HasColumnName("ID_MEDICAO");
-
-                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<decimal>("IdMedicao"));
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("ID_MEDICAO")
+                        .HasDefaultValueSql("\"RM556934\".\"SEQ_MEDICAO_CH\".NEXTVAL");
 
                     b.Property<decimal?>("DistanciaM")
-                        .HasColumnType("FLOAT")
+                        .HasColumnType("FLOAT(10)")
                         .HasColumnName("DISTANCIA_M");
 
-                    b.Property<decimal?>("MarcadorFixoIdMarcadorArucoFixo")
-                        .HasColumnType("NUMBER(38)")
+                    b.Property<int?>("MarcadorFixoIdMarcadorArucoFixo")
+                        .HasColumnType("NUMBER(10)")
                         .HasColumnName("MARCADOR_FIXO_ID_MARCADOR_ARUCO_FIXO");
 
-                    b.Property<decimal?>("PosicaoIdPosicao")
-                        .HasColumnType("NUMBER(38)")
+                    b.Property<int?>("PosicaoIdPosicao")
+                        .HasColumnType("NUMBER(10)")
                         .HasColumnName("POSICAO_ID_POSICAO");
 
                     b.HasKey("IdMedicao");
@@ -119,12 +126,11 @@ namespace challenge_api_dotnet.Migrations
 
             modelBuilder.Entity("challenge_api_dotnet.Models.Moto", b =>
                 {
-                    b.Property<decimal>("IdMoto")
+                    b.Property<int>("IdMoto")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(38)")
-                        .HasColumnName("ID_MOTO");
-
-                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<decimal>("IdMoto"));
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("ID_MOTO")
+                        .HasDefaultValueSql("\"RM556934\".\"SEQ_MOTO_CH\".NEXTVAL");
 
                     b.Property<DateTime?>("DataCadastro")
                         .HasColumnType("DATE")
@@ -151,20 +157,18 @@ namespace challenge_api_dotnet.Migrations
                     b.HasKey("IdMoto");
 
                     b.HasIndex("Placa")
-                        .IsUnique()
-                        .HasFilter("\"PLACA\" IS NOT NULL");
+                        .IsUnique();
 
                     b.ToTable("MOTO", "RM556934");
                 });
 
             modelBuilder.Entity("challenge_api_dotnet.Models.Patio", b =>
                 {
-                    b.Property<decimal>("IdPatio")
+                    b.Property<int>("IdPatio")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(38)")
-                        .HasColumnName("ID_PATIO");
-
-                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<decimal>("IdPatio"));
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("ID_PATIO")
+                        .HasDefaultValueSql("\"RM556934\".\"SEQ_PATIO_CH\".NEXTVAL");
 
                     b.Property<string>("Descricao")
                         .HasMaxLength(255)
@@ -191,31 +195,30 @@ namespace challenge_api_dotnet.Migrations
 
             modelBuilder.Entity("challenge_api_dotnet.Models.Posicao", b =>
                 {
-                    b.Property<decimal>("IdPosicao")
+                    b.Property<int>("IdPosicao")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(38)")
-                        .HasColumnName("ID_POSICAO");
-
-                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<decimal>("IdPosicao"));
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("ID_POSICAO")
+                        .HasDefaultValueSql("\"RM556934\".\"SEQ_POS_CH\".NEXTVAL");
 
                     b.Property<DateTime?>("DataHora")
                         .HasColumnType("DATE")
                         .HasColumnName("DATA_HORA");
 
-                    b.Property<decimal?>("MotoIdMoto")
-                        .HasColumnType("NUMBER(38)")
+                    b.Property<int?>("MotoIdMoto")
+                        .HasColumnType("NUMBER(10)")
                         .HasColumnName("MOTO_ID_MOTO");
 
-                    b.Property<decimal?>("PatioIdPatio")
-                        .HasColumnType("NUMBER(38)")
+                    b.Property<int?>("PatioIdPatio")
+                        .HasColumnType("NUMBER(10)")
                         .HasColumnName("PATIO_ID_PATIO");
 
                     b.Property<decimal?>("XPos")
-                        .HasColumnType("FLOAT")
+                        .HasColumnType("FLOAT(10)")
                         .HasColumnName("X_POS");
 
                     b.Property<decimal?>("YPos")
-                        .HasColumnType("FLOAT")
+                        .HasColumnType("FLOAT(10)")
                         .HasColumnName("Y_POS");
 
                     b.HasKey("IdPosicao");
@@ -229,12 +232,11 @@ namespace challenge_api_dotnet.Migrations
 
             modelBuilder.Entity("challenge_api_dotnet.Models.Usuario", b =>
                 {
-                    b.Property<decimal>("IdUsuario")
+                    b.Property<int>("IdUsuario")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(38)")
-                        .HasColumnName("ID_USUARIO");
-
-                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<decimal>("IdUsuario"));
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("ID_USUARIO")
+                        .HasDefaultValueSql("\"RM556934\".\"SEQ_USUARIO_CH\".NEXTVAL");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -250,8 +252,8 @@ namespace challenge_api_dotnet.Migrations
                         .HasColumnType("VARCHAR2(100)")
                         .HasColumnName("NOME");
 
-                    b.Property<decimal>("PatioIdPatio")
-                        .HasColumnType("NUMBER(38)")
+                    b.Property<int>("PatioIdPatio")
+                        .HasColumnType("NUMBER(10)")
                         .HasColumnName("PATIO_ID_PATIO");
 
                     b.Property<string>("Senha")
@@ -269,6 +271,12 @@ namespace challenge_api_dotnet.Migrations
                         .HasColumnName("STATUS")
                         .HasDefaultValueSql("'ativo'");
 
+                    b.Property<string>("Tipo")
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("VARCHAR2(20)")
+                        .HasColumnName("TIPO");
+
                     b.HasKey("IdUsuario");
 
                     b.HasIndex("Email")
@@ -276,7 +284,10 @@ namespace challenge_api_dotnet.Migrations
 
                     b.HasIndex("PatioIdPatio");
 
-                    b.ToTable("USUARIO", "RM556934");
+                    b.ToTable("USUARIO", "RM556934", t =>
+                        {
+                            t.HasCheckConstraint("USUARIO_TIPO_CHK", "\"TIPO\" IN (''USER'',''ADMIN'')");
+                        });
                 });
 
             modelBuilder.Entity("challenge_api_dotnet.Models.MarcadorArucoMovel", b =>

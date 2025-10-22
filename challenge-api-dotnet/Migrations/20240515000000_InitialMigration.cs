@@ -14,13 +14,47 @@ namespace challenge_api_dotnet.Migrations
             migrationBuilder.EnsureSchema(
                 name: "RM556934");
 
+            migrationBuilder.CreateSequence<int>(
+                name: "SEQ_MARCADOR_F_CH",
+                schema: "RM556934",
+                startValue: 1L);
+
+            migrationBuilder.CreateSequence<int>(
+                name: "SEQ_MARCADOR_M_CH",
+                schema: "RM556934",
+                startValue: 1L);
+
+            migrationBuilder.CreateSequence<int>(
+                name: "SEQ_MEDICAO_CH",
+                schema: "RM556934",
+                startValue: 1L);
+
+            migrationBuilder.CreateSequence<int>(
+                name: "SEQ_MOTO_CH",
+                schema: "RM556934",
+                startValue: 1L);
+
+            migrationBuilder.CreateSequence<int>(
+                name: "SEQ_PATIO_CH",
+                schema: "RM556934",
+                startValue: 1L);
+
+            migrationBuilder.CreateSequence<int>(
+                name: "SEQ_POS_CH",
+                schema: "RM556934",
+                startValue: 1L);
+
+            migrationBuilder.CreateSequence<int>(
+                name: "SEQ_USUARIO_CH",
+                schema: "RM556934",
+                startValue: 1L);
+
             migrationBuilder.CreateTable(
                 name: "MOTO",
                 schema: "RM556934",
                 columns: table => new
                 {
-                    ID_MOTO = table.Column<decimal>(type: "NUMBER(38)", nullable: false)
-                        .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
+                    ID_MOTO = table.Column<int>(type: "NUMBER(10)", nullable: false, defaultValueSql: "\"RM556934\".\"SEQ_MOTO_CH\".NEXTVAL"),
                     PLACA = table.Column<string>(type: "VARCHAR2(7)", unicode: false, maxLength: 7, nullable: true),
                     MODELO = table.Column<string>(type: "VARCHAR2(50)", unicode: false, maxLength: 50, nullable: true),
                     STATUS = table.Column<string>(type: "VARCHAR2(65)", unicode: false, maxLength: 65, nullable: true),
@@ -36,8 +70,7 @@ namespace challenge_api_dotnet.Migrations
                 schema: "RM556934",
                 columns: table => new
                 {
-                    ID_PATIO = table.Column<decimal>(type: "NUMBER(38)", nullable: false)
-                        .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
+                    ID_PATIO = table.Column<int>(type: "NUMBER(10)", nullable: false, defaultValueSql: "\"RM556934\".\"SEQ_PATIO_CH\".NEXTVAL"),
                     NOME = table.Column<string>(type: "VARCHAR2(100)", unicode: false, maxLength: 100, nullable: true),
                     LOCALIZACAO = table.Column<string>(type: "VARCHAR2(100)", unicode: false, maxLength: 100, nullable: true),
                     DESCRICAO = table.Column<string>(type: "VARCHAR2(255)", unicode: false, maxLength: 255, nullable: true)
@@ -52,11 +85,10 @@ namespace challenge_api_dotnet.Migrations
                 schema: "RM556934",
                 columns: table => new
                 {
-                    ID_MARCADOR_MOVEL = table.Column<decimal>(type: "NUMBER(38)", nullable: false)
-                        .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
+                    ID_MARCADOR_MOVEL = table.Column<int>(type: "NUMBER(10)", nullable: false, defaultValueSql: "\"RM556934\".\"SEQ_MARCADOR_M_CH\".NEXTVAL"),
                     CODIGO_ARUCO = table.Column<string>(type: "VARCHAR2(50)", unicode: false, maxLength: 50, nullable: true),
                     DATA_INSTALACAO = table.Column<DateTime>(type: "DATE", nullable: true),
-                    MOTO_ID_MOTO = table.Column<decimal>(type: "NUMBER(38)", nullable: true)
+                    MOTO_ID_MOTO = table.Column<int>(type: "NUMBER(10)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -66,7 +98,8 @@ namespace challenge_api_dotnet.Migrations
                         column: x => x.MOTO_ID_MOTO,
                         principalSchema: "RM556934",
                         principalTable: "MOTO",
-                        principalColumn: "ID_MOTO");
+                        principalColumn: "ID_MOTO",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -74,12 +107,11 @@ namespace challenge_api_dotnet.Migrations
                 schema: "RM556934",
                 columns: table => new
                 {
-                    ID_MARCADOR_ARUCO_FIXO = table.Column<decimal>(type: "NUMBER(38)", nullable: false)
-                        .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
+                    ID_MARCADOR_ARUCO_FIXO = table.Column<int>(type: "NUMBER(10)", nullable: false, defaultValueSql: "\"RM556934\".\"SEQ_MARCADOR_F_CH\".NEXTVAL"),
                     CODIGO_ARUCO = table.Column<string>(type: "VARCHAR2(50)", unicode: false, maxLength: 50, nullable: true),
-                    X_POS = table.Column<decimal>(type: "FLOAT", nullable: true),
-                    Y_POS = table.Column<decimal>(type: "FLOAT", nullable: true),
-                    PATIO_ID_PATIO = table.Column<decimal>(type: "NUMBER(38)", nullable: true)
+                    X_POS = table.Column<decimal>(type: "FLOAT(10)", nullable: true),
+                    Y_POS = table.Column<decimal>(type: "FLOAT(10)", nullable: true),
+                    PATIO_ID_PATIO = table.Column<int>(type: "NUMBER(10)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -89,7 +121,8 @@ namespace challenge_api_dotnet.Migrations
                         column: x => x.PATIO_ID_PATIO,
                         principalSchema: "RM556934",
                         principalTable: "PATIO",
-                        principalColumn: "ID_PATIO");
+                        principalColumn: "ID_PATIO",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -97,13 +130,12 @@ namespace challenge_api_dotnet.Migrations
                 schema: "RM556934",
                 columns: table => new
                 {
-                    ID_POSICAO = table.Column<decimal>(type: "NUMBER(38)", nullable: false)
-                        .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    X_POS = table.Column<decimal>(type: "FLOAT", nullable: true),
-                    Y_POS = table.Column<decimal>(type: "FLOAT", nullable: true),
+                    ID_POSICAO = table.Column<int>(type: "NUMBER(10)", nullable: false, defaultValueSql: "\"RM556934\".\"SEQ_POS_CH\".NEXTVAL"),
+                    X_POS = table.Column<decimal>(type: "FLOAT(10)", nullable: true),
+                    Y_POS = table.Column<decimal>(type: "FLOAT(10)", nullable: true),
                     DATA_HORA = table.Column<DateTime>(type: "DATE", nullable: true),
-                    MOTO_ID_MOTO = table.Column<decimal>(type: "NUMBER(38)", nullable: true),
-                    PATIO_ID_PATIO = table.Column<decimal>(type: "NUMBER(38)", nullable: true)
+                    MOTO_ID_MOTO = table.Column<int>(type: "NUMBER(10)", nullable: true),
+                    PATIO_ID_PATIO = table.Column<int>(type: "NUMBER(10)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -113,13 +145,15 @@ namespace challenge_api_dotnet.Migrations
                         column: x => x.MOTO_ID_MOTO,
                         principalSchema: "RM556934",
                         principalTable: "MOTO",
-                        principalColumn: "ID_MOTO");
+                        principalColumn: "ID_MOTO",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "SYS_C004862165",
                         column: x => x.PATIO_ID_PATIO,
                         principalSchema: "RM556934",
                         principalTable: "PATIO",
-                        principalColumn: "ID_PATIO");
+                        principalColumn: "ID_PATIO",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -127,13 +161,13 @@ namespace challenge_api_dotnet.Migrations
                 schema: "RM556934",
                 columns: table => new
                 {
-                    ID_USUARIO = table.Column<decimal>(type: "NUMBER(38)", nullable: false)
-                        .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
+                    ID_USUARIO = table.Column<int>(type: "NUMBER(10)", nullable: false, defaultValueSql: "\"RM556934\".\"SEQ_USUARIO_CH\".NEXTVAL"),
                     NOME = table.Column<string>(type: "VARCHAR2(100)", unicode: false, maxLength: 100, nullable: false),
                     EMAIL = table.Column<string>(type: "VARCHAR2(100)", unicode: false, maxLength: 100, nullable: false),
                     SENHA = table.Column<string>(type: "VARCHAR2(255)", unicode: false, maxLength: 255, nullable: false),
                     STATUS = table.Column<string>(type: "VARCHAR2(20)", unicode: false, maxLength: 20, nullable: true, defaultValueSql: "'ativo'"),
-                    PATIO_ID_PATIO = table.Column<decimal>(type: "NUMBER(38)", nullable: false)
+                    TIPO = table.Column<string>(type: "VARCHAR2(20)", unicode: false, maxLength: 20, nullable: true),
+                    PATIO_ID_PATIO = table.Column<int>(type: "NUMBER(10)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -143,7 +177,9 @@ namespace challenge_api_dotnet.Migrations
                         column: x => x.PATIO_ID_PATIO,
                         principalSchema: "RM556934",
                         principalTable: "PATIO",
-                        principalColumn: "ID_PATIO");
+                        principalColumn: "ID_PATIO",
+                        onDelete: ReferentialAction.Restrict);
+                    table.CheckConstraint("USUARIO_TIPO_CHK", "\"TIPO\" IN (''USER'',''ADMIN'')");
                 });
 
             migrationBuilder.CreateTable(
@@ -151,11 +187,10 @@ namespace challenge_api_dotnet.Migrations
                 schema: "RM556934",
                 columns: table => new
                 {
-                    ID_MEDICAO = table.Column<decimal>(type: "NUMBER(38)", nullable: false)
-                        .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    DISTANCIA_M = table.Column<decimal>(type: "FLOAT", nullable: true),
-                    POSICAO_ID_POSICAO = table.Column<decimal>(type: "NUMBER(38)", nullable: true),
-                    MARCADOR_FIXO_ID_MARCADOR_ARUCO_FIXO = table.Column<decimal>(type: "NUMBER(38)", nullable: true)
+                    ID_MEDICAO = table.Column<int>(type: "NUMBER(10)", nullable: false, defaultValueSql: "\"RM556934\".\"SEQ_MEDICAO_CH\".NEXTVAL"),
+                    DISTANCIA_M = table.Column<decimal>(type: "FLOAT(10)", nullable: true),
+                    POSICAO_ID_POSICAO = table.Column<int>(type: "NUMBER(10)", nullable: true),
+                    MARCADOR_FIXO_ID_MARCADOR_ARUCO_FIXO = table.Column<int>(type: "NUMBER(10)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -165,13 +200,15 @@ namespace challenge_api_dotnet.Migrations
                         column: x => x.POSICAO_ID_POSICAO,
                         principalSchema: "RM556934",
                         principalTable: "POSICAO",
-                        principalColumn: "ID_POSICAO");
+                        principalColumn: "ID_POSICAO",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "SYS_C004862172",
                         column: x => x.MARCADOR_FIXO_ID_MARCADOR_ARUCO_FIXO,
                         principalSchema: "RM556934",
                         principalTable: "MARCADOR_FIXO",
-                        principalColumn: "ID_MARCADOR_ARUCO_FIXO");
+                        principalColumn: "ID_MARCADOR_ARUCO_FIXO",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
@@ -203,8 +240,7 @@ namespace challenge_api_dotnet.Migrations
                 schema: "RM556934",
                 table: "MOTO",
                 column: "PLACA",
-                unique: true,
-                filter: "\"PLACA\" IS NOT NULL");
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_POSICAO_MOTO_ID_MOTO",
@@ -261,6 +297,34 @@ namespace challenge_api_dotnet.Migrations
 
             migrationBuilder.DropTable(
                 name: "PATIO",
+                schema: "RM556934");
+
+            migrationBuilder.DropSequence(
+                name: "SEQ_MARCADOR_F_CH",
+                schema: "RM556934");
+
+            migrationBuilder.DropSequence(
+                name: "SEQ_MARCADOR_M_CH",
+                schema: "RM556934");
+
+            migrationBuilder.DropSequence(
+                name: "SEQ_MEDICAO_CH",
+                schema: "RM556934");
+
+            migrationBuilder.DropSequence(
+                name: "SEQ_MOTO_CH",
+                schema: "RM556934");
+
+            migrationBuilder.DropSequence(
+                name: "SEQ_PATIO_CH",
+                schema: "RM556934");
+
+            migrationBuilder.DropSequence(
+                name: "SEQ_POS_CH",
+                schema: "RM556934");
+
+            migrationBuilder.DropSequence(
+                name: "SEQ_USUARIO_CH",
                 schema: "RM556934");
         }
     }

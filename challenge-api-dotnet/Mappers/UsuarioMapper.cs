@@ -12,6 +12,7 @@ public class UsuarioMapper
         Email = dto.Email,
         Senha = dto.Senha,
         Status = dto.Status,
+        Tipo = dto.Tipo,
         PatioIdPatio = dto.PatioId
     };
 
@@ -21,6 +22,7 @@ public class UsuarioMapper
         Nome = usuario.Nome,
         Email = usuario.Email,
         Status = usuario.Status,
+        Tipo = usuario.Tipo,
         PatioId = usuario.PatioIdPatio
 
     };

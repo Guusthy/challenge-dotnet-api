@@ -15,6 +15,8 @@ public partial class Usuario
 
     public string? Status { get; set; }
 
+    public string? Tipo { get; set; }
+
     public int PatioIdPatio { get; set; }
     public virtual Patio PatioIdPatioNavigation { get; set; } = null!;
 }
