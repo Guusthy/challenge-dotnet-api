@@ -1,5 +1,7 @@
 using System;
 using System.Text;
+using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 using challenge_api_dotnet.Configs;
 using challenge_api_dotnet.Data;
 using challenge_api_dotnet.Hateoas;
@@ -9,21 +11,32 @@ using challenge_api_dotnet.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddApiVersioning(options =>
+    {
+        options.DefaultApiVersion = new ApiVersion(1, 0);
+        options.AssumeDefaultVersionWhenUnspecified = true;
+        options.ReportApiVersions = true;
+        options.ApiVersionReader = ApiVersionReader.Combine(
+            new UrlSegmentApiVersionReader(),
+            new HeaderApiVersionReader("x-api-version"),
+            new QueryStringApiVersionReader("api-version"));
+    })
+    .AddApiExplorer(options =>
+    {
+        options.GroupNameFormat = "'v'VVV";
+        options.SubstituteApiVersionInUrl = true;
+    });
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "Challenge API",
-        Version = "v1",
-        Description = "API do Challenge – gestão de motos/pátios."
-    });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -48,6 +61,8 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
+builder.Services.AddHealthChecks();
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var privateKey = jwtSection["PrivateKey"] ?? throw new InvalidOperationException("Jwt:PrivateKey não está configurado.");
 var issuer = jwtSection["Issuer"] ?? throw new InvalidOperationException("Jwt:Issuer não está configurado.");
@@ -105,9 +120,13 @@ var app = builder.Build();
 
 app.UseSwagger(c => { c.RouteTemplate = "openapi/{documentName}.json"; });
 
+var apiVersionDescriptionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("/openapi/v1.json", "Challenge API v1");
+    foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
+    {
+        c.SwaggerEndpoint($"/openapi/{description.GroupName}.json", $"Challenge API {description.ApiVersion}");
+    }
     c.DocumentTitle = "Challenge API - Swagger UI";
 });
 
@@ -115,4 +134,5 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks("/health");
 app.Run();

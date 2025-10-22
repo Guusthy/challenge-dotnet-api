@@ -1,4 +1,6 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 
 namespace challenge_api_dotnet.Hateoas;
 
@@ -6,7 +8,19 @@ public static class UrlBuilderExtensions
 {
     // Padronização da geração de URLs
     public static string ActionHref(this IUrlHelper url, string action, object? routeValues = null)
-        => url.Action(action, routeValues) ?? string.Empty;
+    {
+        var values = routeValues is null
+            ? new RouteValueDictionary()
+            : new RouteValueDictionary(routeValues);
+
+        if (!values.ContainsKey("version"))
+        {
+            var requestedVersion = url.ActionContext.HttpContext.GetRequestedApiVersion()?.ToString();
+            values["version"] = requestedVersion ?? "1.0";
+        }
+
+        return url.Action(action, values) ?? string.Empty;
+    }
 
     public static IEnumerable<HateoasLink> PagingLinks(this IUrlHelper url, string listAction, int page, int size,
         int totalPages)

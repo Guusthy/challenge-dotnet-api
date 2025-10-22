@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using challenge_api_dotnet.Dtos;
 using challenge_api_dotnet.Hateoas;
 using challenge_api_dotnet.Services.Interfaces;
@@ -5,8 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace challenge_api_dotnet.Controllers;
 
+[ApiVersion("1.0")]
 [ApiController]
-[Route("api/auth")]
+[Route("api/v{version:apiVersion}/auth")]
 [Produces("application/json")]
 [Tags("Autenticação")]
 public class AuthController : ControllerBase

@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using challenge_api_dotnet.Data;
 using challenge_api_dotnet.Dtos;
 using challenge_api_dotnet.Hateoas;
@@ -9,9 +10,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace challenge_api_dotnet.Controllers;
 
+[ApiVersion("1.0")]
 [ApiController]
 [Authorize]
-[Route("api/marcadores-fixos")]
+[Route("api/v{version:apiVersion}/marcadores-fixos")]
 [Produces("application/json")]
 [Tags("Marcadores ArUco Fixos")]
 public class MarcadorFixoController : ControllerBase
