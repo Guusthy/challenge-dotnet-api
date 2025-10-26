@@ -167,6 +167,30 @@ public class MedicaoPosicaoController : ControllerBase
             new Resource<MedicaoPosicaoDTO>(created, links));
     }
 
+    [HttpPost("predicao")]
+    [Consumes("application/json")]
+    [EndpointSummary("Prever distância entre posição e marcador fixo")]
+    [EndpointDescription("Treina dinamicamente um modelo com ML.NET e retorna a distância prevista para a combinação informada.")]
+    [ProducesResponseType(typeof(MedicaoPosicaoPredictionResponseDTO), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<MedicaoPosicaoPredictionResponseDTO>> PredictDistance([FromBody] MedicaoPosicaoPredictionRequestDTO request)
+    {
+        try
+        {
+            var prediction = await _service.PredictDistanceAsync(request);
+            return Ok(prediction);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
+    }
+
     // Métodos auxiliares de paginação
     private IEnumerable<HateoasLink> BuildPosicaoPagingLinks(int posicaoId, int page, int size, int totalPages)
     {

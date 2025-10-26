@@ -16,4 +16,6 @@ public interface IMedicaoPosicaoService
     Task<int> CountByPosicaoIdAsync(int posicaoId);
 
     Task<MedicaoPosicaoDTO> CreateAsync(MedicaoPosicaoDTO dto);
+    
+    Task<MedicaoPosicaoPredictionResponseDTO> PredictDistanceAsync(MedicaoPosicaoPredictionRequestDTO request);
 }
