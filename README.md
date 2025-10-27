@@ -28,6 +28,10 @@ A API será consumida por uma aplicação móvel voltada aos operadores dos pát
 - Oracle Database (via Oracle EF Core Provider)
 - Swagger (OpenAPI 3)
 - Docker (em desenvolvimento)
+- **JWT (JSON Web Token)**
+- **API Versioning**
+- **ML.NET**
+- **xUnit + WebApplicationFactory (Testes)**
 - Git e GitHub
 
 ---
@@ -46,14 +50,24 @@ A API será consumida por uma aplicação móvel voltada aos operadores dos pát
 
    Exemplo de configuração:
    ```json
+   {
    "ConnectionStrings": {
      "DefaultConnection": "User Id=seu-id;Password=sua-senha;Data Source=oracle.fiap.com.br:1521/orcl"
+   },
+   "Jwt": {
+    "Issuer": "ChallengeApi",
+    "Audience": "ChallengeClients",
+    "PrivateKey": "CRIE-SUA-KEY-16-CARACTERES"
+      }
    }
+
    ```
    > Substitua `seu-id` pelo seu RM e informe a senha fornecida pela FIAP.  
 
 4. Rode a aplicação:
     ```bash
+    cd challenge-dotnet-api
+    
     dotnet run
     ```
 5. Acesse a documentação da API:
@@ -70,6 +84,79 @@ Foram configurados:
 - Modelos de dados expostos automaticamente  
 
 Com isso, é possível explorar e testar a API diretamente via navegador.
+
+---
+
+## Autenticação JWT
+
+1. Faça login para obter o token JWT via `/api/v1/auth/login`;
+2. Use o token retornado nas requisições:
+   
+   ```
+   Authorization: Bearer <seu_token_jwt>
+   ```
+4. Chaves configuradas no `appsettings.json`:
+   - `Issuer`: ChallengeApi  
+   - `Audience`: ChallengeClients  
+   - `PrivateKey`: (chave secreta configurada no projeto)
+
+---
+
+## Testes Automatizados
+
+- **xUnit**: valida a lógica principal (serviços e repositórios);
+- **WebApplicationFactory**: realiza testes de integração simulando chamadas HTTP;
+### Execução obrigatoriamente na raiz do projeto
+
+> É **fundamental** executar os testes **a partir da raiz do repositório**, onde se encontra o arquivo de solução:
+>
+> ```
+> challenge-api-dotnet/ ← Executar os testes a partir deste nível
+> ├── challenge-api-dotnet/
+> ├── challenge-api-dotnet.Tests/
+> ├── challenge-api-dotnet.sln  
+> ```
+>
+> Isso garante que o runner do .NET localize corretamente o projeto de testes e todas as dependências.
+
+- Execução dos testes na **raiz do projeto**:
+  
+  ```bash
+  dotnet test
+  ```
+
+---
+
+## Endpoint com ML.NET
+
+Foi adicionado um endpoint que utiliza **ML.NET** para realizar inferências baseadas em dados armazenados.  
+Exemplo:
+```
+POST /api/v1/medicoes/predicao
+```
+**Payload de exemplo:**
+```json
+{
+  "posicaoId" : 1,
+  "marcadorFixoId" : 1
+}
+```
+Retorna uma previsão ou classificação de acordo com o modelo treinado.
+
+---
+
+## Health Check
+
+Endpoint:
+```
+GET /health
+```
+Retorna o status da aplicação e de seus componentes:
+```json
+{
+  "status": "Healthy",
+}
+```
 
 ---
 
