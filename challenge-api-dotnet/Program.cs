@@ -63,12 +63,22 @@ builder.Services.AddSwaggerGen(c =>
 });
 builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 builder.Services.AddHealthChecks();
-var jwtSection = builder.Configuration.GetSection("Jwt");
-var privateKey = jwtSection["PrivateKey"] ?? throw new InvalidOperationException("Jwt:PrivateKey não está configurado.");
-var issuer = jwtSection["Issuer"] ?? throw new InvalidOperationException("Jwt:Issuer não está configurado.");
-var audience = jwtSection["Audience"] ?? throw new InvalidOperationException("Jwt:Audience não está configurado.");
+if (builder.Environment.IsEnvironment("Testing"))
+{
+    Configuration.SetJwtOptions(
+        privateKey: "0123456789abcdef0123456789abcdef",
+        issuer: "integration-tests",
+        audience: "integration-tests");
+}
+else
+{
+    var jwtSection = builder.Configuration.GetSection("Jwt");
+    var privateKey = jwtSection["PrivateKey"] ?? throw new InvalidOperationException("Jwt:PrivateKey não está configurado.");
+    var issuer = jwtSection["Issuer"] ?? throw new InvalidOperationException("Jwt:Issuer não está configurado.");
+    var audience = jwtSection["Audience"] ?? throw new InvalidOperationException("Jwt:Audience não está configurado.");
 
-Configuration.SetJwtOptions(privateKey, issuer, audience);
+    Configuration.SetJwtOptions(privateKey, issuer, audience);
+}
 
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -104,8 +114,20 @@ builder.Services
         };
     });
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<ApplicationDbContext>(options => { options.UseOracle(connectionString); });
+if (builder.Environment.IsEnvironment("Testing"))
+{
+    var databaseName = builder.Configuration.GetValue<string>("DatabaseName") ?? "ChallengeApiTestsDb";
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    {
+        options.UseInMemoryDatabase(databaseName);
+    });
+}
+else
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+                         ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection não configurado.");
+    builder.Services.AddDbContext<ApplicationDbContext>(options => { options.UseOracle(connectionString); });
+}
 
 builder.Services.AddScoped<IMarcadorArucoMovelService, MarcadorArucoMovelService>();
 builder.Services.AddScoped<IMarcadorFixoService, MarcadorFixoService>();
