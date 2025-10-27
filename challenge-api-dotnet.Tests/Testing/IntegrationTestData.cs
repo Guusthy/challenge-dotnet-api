@@ -1,5 +1,6 @@
 using challenge_api_dotnet.Data;
 using challenge_api_dotnet.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace challenge_api_dotnet.Tests.Testing;
 
@@ -55,9 +56,11 @@ public static class IntegrationTestData
             IdUsuario = 1,
             Nome = "Carlos",
             Email = "carlos@example.com",
-            Senha = "senha",
             PatioIdPatio = patio1.IdPatio
         };
+
+        var passwordHasher = new PasswordHasher<Usuario>();
+        usuario.Senha = passwordHasher.HashPassword(usuario, "SenhaSegura!1");
 
         context.Posicoes.AddRange(posicao1, posicao2);
         context.MarcadoresFixos.Add(marcador);

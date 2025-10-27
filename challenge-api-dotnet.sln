@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "challenge-api-dotnet", "challenge-api-dotnet\challenge-api-dotnet.csproj", "{5099A5FE-DA17-4AD1-B404-0E4AB2A034B7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "challenge-api-dotnet.Tests", "challenge-api-dotnet.Tests\challenge-api-dotnet.Tests.csproj", "{7F88B2DF-31C1-47AF-9F47-DFF4BE7BDCF1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,6 +14,10 @@ Global
 		{5099A5FE-DA17-4AD1-B404-0E4AB2A034B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5099A5FE-DA17-4AD1-B404-0E4AB2A034B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5099A5FE-DA17-4AD1-B404-0E4AB2A034B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F88B2DF-31C1-47AF-9F47-DFF4BE7BDCF1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F88B2DF-31C1-47AF-9F47-DFF4BE7BDCF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F88B2DF-31C1-47AF-9F47-DFF4BE7BDCF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F88B2DF-31C1-47AF-9F47-DFF4BE7BDCF1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
