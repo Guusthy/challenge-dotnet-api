@@ -160,6 +160,61 @@ Retorna o status da aplicação e de seus componentes:
 
 ---
 
+## Arquitetura da Solução
+
+## 1️⃣ System Context 
+
+Mostra quem usa o sistema e com quais sistemas externos ele se integra.
+
+```mermaid
+flowchart LR
+    subgraph PessoasApps["Pessoas & Apps"]
+      operador[[Operador / Admin]]
+      appExt[[Aplicativo / Cliente Externo]]
+    end
+
+    subgraph Sistema["Challenge .NET API"]
+      api[(Software System / API REST ASP.NET Core)]
+    end
+
+    subgraph Externos["Sistemas Externos"]
+      db[(Oracle Database)]
+      obs[(Observability / Serilog / App Insights / Seq)]
+    end
+
+    operador -- "HTTP/JSON" --> api
+    appExt -- "HTTP/JSON" --> api
+
+    api -- "EF Core (CRUD)" --> db
+    api -- "Logs / Métricas / Trace" --> obs
+```
+---
+
+## 2️⃣ Container Diagram
+
+Mostra os principais containers e as comunicações entre eles.
+
+```mermaid
+flowchart TD
+    subgraph API["Challenge .NET API"]
+      webapi([ASP.NET Core/Controllers<br/>Swagger<br/>JWT<br/>API Versioning<br/>HealthChecks])
+      service[Service Layer<br/>Regras de Negócio]
+      repo[Repository Layer<br/>EF Core Oracle Provider]
+      ml[ML.NET Service<br/>Predição in‑process]
+      config[Config/Secrets<br/>appsettings + ENV]
+    end
+
+    db[(Oracle Database)]
+    obs[(Observability<br/>Serilog / App Insights / Seq)]
+
+    webapi --> service
+    service --> repo
+    service --> ml
+    repo --> db
+    webapi -- "Logs/telemetria" --> obs
+```
+---
+
 ## Endpoints da API
 
 ### `/api/moto`
