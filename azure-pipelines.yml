@@ -2,7 +2,7 @@
 # Pipeline para build e publicação no Azure DevOps
 
 trigger:
-- main
+- master
 
 pool:
   vmImage: 'ubuntu-latest'
