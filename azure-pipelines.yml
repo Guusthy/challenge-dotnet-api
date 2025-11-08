@@ -1,5 +1,5 @@
 # ASP.NET Core (.NET 8)
-# Pipeline para build, teste e publicação de API ASP.NET Core no Azure DevOps
+# Pipeline para build e publicação no Azure DevOps
 
 trigger:
 - main
@@ -8,8 +8,8 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  solution: 'challenge-api-dotnet.sln'
   buildConfiguration: 'Release'
+  projectPath: 'challenge-api-dotnet/challenge-api-dotnet.csproj'
 
 steps:
 # Instala o SDK do .NET 8
@@ -19,20 +19,20 @@ steps:
     version: '8.0.x'
     installationPath: $(Agent.ToolsDirectory)/dotnet
 
-# Restaura as dependências do projeto
-- script: dotnet restore $(solution)
+# Restaura as dependências
+- script: dotnet restore $(projectPath)
   displayName: 'Restore dependencies'
 
-# Compila o projeto em modo Release
-- script: dotnet build $(solution) --configuration $(buildConfiguration) --no-restore
+# Compila o projeto
+- script: dotnet build $(projectPath) --configuration $(buildConfiguration) --no-restore
   displayName: 'Build'
 
-# Executa os testes automatizados (se houver)
-- script: dotnet test $(solution) --no-build --verbosity normal
+# Executa testes (caso existam)
+- script: dotnet test $(projectPath) --no-build --verbosity normal
   displayName: 'Run tests'
 
 # Publica os artefatos da build
-- script: dotnet publish $(solution) --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)
+- script: dotnet publish $(projectPath) --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)
   displayName: 'Publish'
 
 # Envia os artefatos publicados para o DevOps
