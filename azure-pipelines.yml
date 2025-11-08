@@ -12,12 +12,16 @@ variables:
   projectPath: 'challenge-api-dotnet/challenge-api-dotnet.csproj'
 
 steps:
-# Instala o SDK do .NET 8
+# Garante que o .NET 8 será usado
 - task: UseDotNet@2
   inputs:
     packageType: 'sdk'
-    version: '8.0.x'
+    version: '8.0.415'
     installationPath: $(Agent.ToolsDirectory)/dotnet
+
+# Verifica qual SDK está sendo usado
+- script: dotnet --info
+  displayName: 'Check .NET SDK version'
 
 # Restaura as dependências
 - script: dotnet restore $(projectPath)
